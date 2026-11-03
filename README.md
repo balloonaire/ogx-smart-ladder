@@ -37,3 +37,6 @@ Add a hosted database (e.g., Supabase), authentication, server-validated match r
 - The Next Match Queue shows waiting pairs, target courts, and top-court rotation status.
 - This is a local-browser prototype, not a synchronized multi-device server.
 - Back up data before replacing files. Existing v1 local storage is imported on first use of v2.
+
+## Manual score entry (V3)
+On each live court, type the exact score for Team A or Team B in its **Score** field, then press Enter or tap outside the field. Scores must be whole numbers from 0 to 999. The +1/−1 buttons remain available. Changes are saved to the local session and are used when **Finish** confirms a match.
