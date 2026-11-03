@@ -29,3 +29,11 @@ The next four waiting players are chosen by fewest games played, then longest wa
 
 ## Next upgrade
 Add a hosted database (e.g., Supabase), authentication, server-validated match results, live synchronized scoreboards, timed timeout rules, and robust queue locking.
+
+## Version 2: Court ladder and next queue
+- Physical court labels can be manually entered in ranked order (highest court first).
+- Winning doubles pairs move one court up; losing pairs move one court down. At boundaries they stay assigned to the boundary court.
+- The highest-court winning pair may defend for at most two consecutive matches. After two, they enter the queue and must sit out at least the next top-court match.
+- The Next Match Queue shows waiting pairs, target courts, and top-court rotation status.
+- This is a local-browser prototype, not a synchronized multi-device server.
+- Back up data before replacing files. Existing v1 local storage is imported on first use of v2.
