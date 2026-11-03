@@ -52,3 +52,10 @@ On each live court, type the exact score for Team A or Team B in its **Score** f
 ## V5: Editable court hierarchy
 
 Use the up/down arrows in Session settings to rearrange the physical court numbers. The first entry is always TOP, regardless of its numeric value (for example 8, 3, 12). The ranking order is saved in this browser. Court numbers must be unique nonnegative integers; finish or cancel any live matches before reordering. The existing promotion, relegation, top-court two-round limit, three-court option, gender labels and manual scoring remain available.
+
+## V6: Two-win TOP champions descend to the last court
+- A doubles team that wins twice consecutively on the TOP court is sent directly to the lowest-ranked court, regardless of physical court number.
+- Both champions become individually eligible for new partners at the bottom court; their TOP streak resets.
+- TOP winners after their first win remain together for their second match.
+- Losers descend individually and mix with other incoming or waiting players on lower courts.
+- Court allocations are transactional: insufficient players leave queue assignments unchanged.

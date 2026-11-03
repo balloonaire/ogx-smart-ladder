@@ -1,5 +1,5 @@
 'use strict';
-// OGX Smart Ladder v4 — court 0 is the highest-ranked court, regardless of its physical label.
+// OGX Smart Ladder v6 — court 0 is the highest-ranked court, regardless of its physical label.
 const KEY='ogx-smart-ladder-v2', OLD='ogx-smart-ladder-v1';
 const $=id=>document.getElementById(id), now=()=>Date.now();
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`;
@@ -23,21 +23,36 @@ function queuePlayer(p,target=null){p.status='waiting';p.queuedAt=now();p.target
 function waitingPlayers(){return state.players.filter(p=>p.status==='waiting');}
 function cleanPairs(){state.pendingPairs=state.pendingPairs.filter(q=>q.ids.length===2&&q.ids.every(id=>player(id)?.status==='waiting'));}
 function queuePair(ids,target,priority=0){const valid=ids.map(player).filter(Boolean);if(valid.length!==2)return;const stamp=now();valid.forEach(p=>{queuePlayer(p,target);p.queuedAt=stamp;});state.pendingPairs.push({ids:[...ids],target,priority,at:stamp,id:uid()});}
-function takePairsForCourt(i){cleanPairs();const picked=[];
-  // The top-court defending pair has first claim on one of the two slots.
-  const candidates=state.pendingPairs.filter(q=>q.target===i&&(q.blockedUntil===undefined||q.blockedUntil<=state.topCompleted)).sort((a,b)=>b.priority-a.priority||a.at-b.at);
-  for(const q of candidates){if(picked.length>=2)break;if(q.ids.some(id=>picked.flat().includes(id)))continue;picked.push(q.ids);state.pendingPairs=state.pendingPairs.filter(x=>x.id!==q.id);}
-  // Fill from unassigned waiting pairs, then eligible individual players.
-  const freePairs=state.pendingPairs.filter(q=>q.target===null).sort((a,b)=>a.at-b.at);
-  for(const q of freePairs){if(picked.length>=2)break;picked.push(q.ids);state.pendingPairs=state.pendingPairs.filter(x=>x.id!==q.id);}
-  const reserved=new Set(state.pendingPairs.flatMap(q=>q.ids));
-  const singles=waitingPlayers().filter(p=>!reserved.has(p.id)&&!picked.flat().includes(p.id)&&p.targetCourt===null).sort((a,b)=>a.games-b.games||a.queuedAt-b.queuedAt);
-  while(picked.length<2&&singles.length>=2)picked.push([singles.shift().id,singles.shift().id]);
-  if(picked.length<2){ // Put selected pairs back rather than losing queue positions.
-    for(const ids of picked)if(!state.pendingPairs.some(q=>q.ids.join('|')===ids.join('|')))state.pendingPairs.push({ids,target:i,priority:0,at:now(),id:uid()});
-    return null;
-  }
-  return picked;
+// Reserve promoted TOP contenders as pairs; mix individuals on lower courts.
+function takePairsForCourt(i){
+ cleanPairs();
+ const eligible=q=>q.target===i&&(q.blockedUntil===undefined||q.blockedUntil<=state.topCompleted);
+ const ranked=state.pendingPairs.filter(eligible).sort((a,b)=>b.priority-a.priority||a.at-b.at);
+ const locked=i===0?ranked.slice(0,2):[];
+ const selected=locked.map(q=>[...q.ids]);
+ const used=new Set(selected.flat());
+ const reserved=new Set(state.pendingPairs.filter(q=>!locked.includes(q)).flatMap(q=>q.ids));
+ // For lower courts, even old pair reservations are dissolved and remixed.
+ const localPairs=i===0?[]:ranked;
+ const localIds=localPairs.flatMap(q=>q.ids);
+ localIds.forEach(id=>reserved.delete(id));
+ const available=waitingPlayers().filter(p=>!used.has(p.id)&&!reserved.has(p.id)&&(p.targetCourt===i||p.targetCourt===null));
+ available.sort((a,b)=>(a.targetCourt===i?0:1)-(b.targetCourt===i?0:1)||a.games-b.games||a.queuedAt-b.queuedAt);
+ const need=4-selected.length*2;
+ if(available.length<need)return null; // No queue mutation on failed allocation.
+ const picked=available.slice(0,need).map(p=>p.id);
+ if(i===0){for(let k=0;k<picked.length;k+=2)selected.push(picked.slice(k,k+2));}
+ else{
+   // Spread incoming players across teams instead of reusing losing pairs.
+   selected.push([picked[0],picked[2]],[picked[1],picked[3]]);
+   // If a previous pair still appears, switch one player when possible.
+   const pairKey=ids=>[...ids].sort().join('|');
+   if(state.lastPairs.includes(pairKey(selected[0]))||state.lastPairs.includes(pairKey(selected[1])))
+     [selected[0][1],selected[1][1]]=[selected[1][1],selected[0][1]];
+ }
+ const assigned=new Set(selected.flat());
+ state.pendingPairs=state.pendingPairs.filter(q=>!q.ids.some(id=>assigned.has(id)));
+ return selected;
 }
 function startMatch(i){if(state.courts[i])return false;const teams=takePairsForCourt(i);if(!teams)return false;teams.flat().forEach(id=>{player(id).status='playing';});
   state.courts[i]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0]};
@@ -48,13 +63,14 @@ function winningTeam(m){const [a,b]=m.scores,{target,winBy,cap}=state.settings;r
 function finish(i){const m=state.courts[i];if(!m)return;const qualified=winningTeam(m);if(qualified===null&&!confirm('Winning condition not reached. Confirm the leading team as winner?'))return;
  const w=qualified===null?(m.scores[0]>m.scores[1]?0:m.scores[1]>m.scores[0]?1:null):qualified;if(w===null){alert('Cannot finish a tied match.');return;}
  const winIds=m.teams[w],loseIds=m.teams[1-w];
+ state.pendingPairs=state.pendingPairs.filter(q=>!q.ids.some(id=>m.teams.flat().includes(id))); 
  for(let t=0;t<2;t++)for(const id of m.teams[t]){const p=player(id);if(!p)continue;p.games++;p.wins+=Number(t===w);p.losses+=Number(t!==w);p.pointsFor+=m.scores[t];p.pointsAgainst+=m.scores[1-t];}
  let note='';
  if(i===0){state.topCompleted++;const newStreak=Math.max(...winIds.map(id=>player(id)?.topStreak||0))+1;
-   if(newStreak>=2){winIds.forEach(id=>{player(id).topStreak=0;});queuePair(winIds,0,-1);state.pendingPairs[state.pendingPairs.length-1].blockedUntil=state.topCompleted+1;note='Top winners completed 2 rounds and join the waiting queue';}
+   if(newStreak>=2){winIds.forEach(id=>{player(id).topStreak=0;queuePlayer(player(id),state.courts.length-1);});note=`Top champions won 2 consecutive rounds and descend directly to ${rankName(state.courts.length-1)} for new partners`;}
    else{winIds.forEach(id=>{player(id).topStreak=newStreak;});queuePair(winIds,0,10);note=`Top winners defend: ${newStreak}/2`;}
  }else{winIds.forEach(id=>{player(id).topStreak=0;});queuePair(winIds,i-1,2);note=`Winners ascend to ${rankName(i-1)}`;}
- loseIds.forEach(id=>{player(id).topStreak=0;});queuePair(loseIds,Math.min(i+1,state.courts.length-1),0);
+ loseIds.forEach(id=>{const p=player(id);p.topStreak=0;queuePlayer(p,Math.min(i+1,state.courts.length-1));});
  state.history.unshift({id:m.id,court:courtName(i),teams:m.teams.map(t=>t.map(displayName)),scores:[...m.scores],winner:w,note,endedAt:now()});
  state.courts[i]=null;autoFill();save();render();
 }
@@ -75,7 +91,7 @@ function render(){const s=state.settings;$('courtCount').value=String(state.cour
  $('playersBody').innerHTML=state.players.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(genderLabel(p))}</td><td>${p.status==='playing'?'On court':'Waiting'}</td><td data-wait="${p.id}">${p.status==='waiting'?fmt(now()-p.queuedAt):'—'}</td><td>${p.games}</td><td>${p.wins}–${p.losses}</td><td><button class="small danger" data-action="remove" data-id="${p.id}" ${p.status==='playing'?'disabled':''}>Remove</button></td></tr>`).join('')||'<tr><td colspan="7" class="muted">Add players to begin.</td></tr>';
  const sorted=[...state.pendingPairs].filter(q=>q.ids.every(id=>player(id)?.status==='waiting')).sort((a,b)=>(a.target??999)-(b.target??999)||b.priority-a.priority||a.at-b.at);
  const reserved=new Set(sorted.flatMap(q=>q.ids));const singles=waitingPlayers().filter(p=>!reserved.has(p.id)).sort((a,b)=>a.queuedAt-b.queuedAt);
- $('nextQueue').innerHTML=sorted.map((q,k)=>`<tr><td>${k+1}</td><td>${esc(names(q.ids))}</td><td>${q.target===null?'Any available court':esc(rankName(q.target))}</td><td>${q.target===0&&q.priority===10?'Top defender':q.target===0&&q.priority<0?'2-round limit · rotate':'Waiting'}</td></tr>`).join('')+singles.map((p,k)=>`<tr><td>${sorted.length+k+1}</td><td>${esc(p.name)}</td><td>Unassigned</td><td>Awaiting partner</td></tr>`).join('')||'<tr><td colspan="4" class="muted">No players waiting.</td></tr>';
+ $('nextQueue').innerHTML=sorted.map((q,k)=>`<tr><td>${k+1}</td><td>${esc(names(q.ids))}</td><td>${q.target===null?'Any available court':esc(rankName(q.target))}</td><td>${q.target===0&&q.priority===10?'Top defender':'Waiting'}</td></tr>`).join('')+singles.map((p,k)=>`<tr><td>${sorted.length+k+1}</td><td>${esc(p.name)}</td><td>${p.targetCourt===null?'Any available court':esc(rankName(p.targetCourt))}</td><td>Mix with incoming players</td></tr>`).join('')||'<tr><td colspan="4" class="muted">No players waiting.</td></tr>';
  $('courts').innerHTML=state.courts.map((m,i)=>{if(!m)return `<article class="court"><div class="court-head"><b>${esc(rankName(i))}</b><span class="pill">Available</span></div><div class="empty">Next pairs are shown in the queue</div><button class="secondary" data-action="start" data-court="${i}">Start next match</button></article>`;
  return `<article class="court"><div class="court-head"><b>${esc(rankName(i))}</b><span class="pill live">${m.pausedAt?'Paused':'Live'}</span></div>${m.teams.map((team,t)=>`<div class="team"><div class="team-name">Team ${t?'B':'A'}<br><b>${esc(names(team))}</b>${i===0?`<br><span class="muted">Top-court streak: ${Math.max(...team.map(id=>player(id)?.topStreak||0))+1}/2</span>`:''}<br><span class="muted">Timeouts: ${m.timeouts[t]}</span></div><label class="score-entry"><span>Score</span><input class="score-input" type="number" inputmode="numeric" min="0" max="999" step="1" aria-label="Team ${t?'B':'A'} score on ${esc(rankName(i))}" data-manual-score data-court="${i}" data-team="${t}" value="${m.scores[t]}"></label><div><button class="small" data-action="score" data-court="${i}" data-team="${t}" data-delta="1" ${m.pausedAt?'disabled':''}>+1</button><br><button class="small secondary" data-action="score" data-court="${i}" data-team="${t}" data-delta="-1" ${m.pausedAt?'disabled':''}>−1</button></div></div><button class="small secondary" data-action="timeout" data-court="${i}" data-team="${t}">Record Team ${t?'B':'A'} Timeout</button>`).join('')}<p class="clock" data-clock="${i}">Match ${fmt((m.pausedAt||now())-m.startedAt-m.pausedMs)}</p><p class="hint">${winningTeam(m)!==null?'Winning score reached — confirm result.':'Match in progress'}</p><div class="actions"><button class="secondary" data-action="pause" data-court="${i}">${m.pausedAt?'Resume':'Pause'}</button><button data-action="finish" data-court="${i}">Finish</button><button class="danger" data-action="cancel" data-court="${i}">Cancel</button></div></article>`}).join('');
  const ranked=[...state.players].sort((a,b)=>b.wins-a.wins||(b.pointsFor-b.pointsAgainst)-(a.pointsFor-a.pointsAgainst)||a.name.localeCompare(b.name));$('leaderboard').innerHTML=ranked.map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.name)}</td><td>${p.wins}</td><td>${p.losses}</td><td>${p.pointsFor-p.pointsAgainst>0?'+':''}${p.pointsFor-p.pointsAgainst}</td></tr>`).join('')||'<tr><td colspan="5">No results yet.</td></tr>';
