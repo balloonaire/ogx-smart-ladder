@@ -59,3 +59,13 @@ Use the up/down arrows in Session settings to rearrange the physical court numbe
 - TOP winners after their first win remain together for their second match.
 - Losers descend individually and mix with other incoming or waiting players on lower courts.
 - Court allocations are transactional: insufficient players leave queue assignments unchanged.
+
+## V7: Rest and lower-court substitutions
+
+- Use **Rest** beside a waiting player to remove them from match selection. **Resume** restores their waiting eligibility. Resting does not remove their registration, scores, or statistics.
+- Use **Sub lower** to put an eligible waiting player at the front of the lowest-court candidate pool. The substitution applies only to the next match, never a match already in progress.
+- Lower-court partners are remixed. A player assigned to a non-TOP lower court may fill an otherwise available lowest-court slot. TOP-court reserved pairs are not taken as substitutes.
+- Queue state is saved in browser local storage and included in JSON exports.
+
+## V8 emergency queue name editing
+Waiting players can be renamed from the player list or next-match queue. Duplicate or blank names are rejected. Player IDs, scores, statistics, court assignments, and queue positions are preserved. Completed match history retains the names recorded when each match finished. This is a name correction, not a player substitution.
