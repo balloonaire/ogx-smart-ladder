@@ -40,3 +40,15 @@ Add a hosted database (e.g., Supabase), authentication, server-validated match r
 
 ## Manual score entry (V3)
 On each live court, type the exact score for Team A or Team B in its **Score** field, then press Enter or tap outside the field. Scores must be whole numbers from 0 to 999. The +1/−1 buttons remain available. Changes are saved to the local session and are used when **Finish** confirms a match.
+
+
+## V4 additions
+- **Three courts** is now a supported session size (1, 2, 3, 4, 6 or 8). Court order remains highest to lowest and physical labels can be customized.
+- Player registration includes an optional **gender** field (Female, Male, Non-binary, Prefer not to say).
+- Gender appears in the player table and alongside player names in court matchups, the next-match queue and completed match history when disclosed.
+- Existing saved players and imported backups without gender remain supported and display **Not specified** in the player table.
+- Gender does not affect scheduling or team formation.
+
+## V5: Editable court hierarchy
+
+Use the up/down arrows in Session settings to rearrange the physical court numbers. The first entry is always TOP, regardless of its numeric value (for example 8, 3, 12). The ranking order is saved in this browser. Court numbers must be unique nonnegative integers; finish or cancel any live matches before reordering. The existing promotion, relegation, top-court two-round limit, three-court option, gender labels and manual scoring remain available.
