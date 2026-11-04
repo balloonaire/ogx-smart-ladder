@@ -69,3 +69,11 @@ Use the up/down arrows in Session settings to rearrange the physical court numbe
 
 ## V8 emergency queue name editing
 Waiting players can be renamed from the player list or next-match queue. Duplicate or blank names are rejected. Player IDs, scores, statistics, court assignments, and queue positions are preserved. Completed match history retains the names recorded when each match finished. This is a name correction, not a player substitution.
+
+## V9: Rest directly from the next-match queue
+Every individual waiting player has a Rest button next to their name, including players in reserved pairs. Resting removes their pending pair reservation and excludes them from matchmaking. Resume from the Players table restores waiting eligibility.
+
+## V10: Leaderboard and TOP court improvements
+- Leaderboard gender tags: M for Male and F for Female; other or unspecified genders show no tag.
+- Playing Time is the accumulated duration of completed matches per player, excluding match pauses. In-progress matches do not count until completed; cancelled matches do not count. Historical matches from before V10 have no recorded durations and cannot be reconstructed.
+- Highest-ranked court (court index 0) gets a sky-blue match sheet, independent of its physical court number.

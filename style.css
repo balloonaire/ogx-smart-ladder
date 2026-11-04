@@ -4,3 +4,16 @@
 .score-entry{display:grid;gap:3px;text-align:center;color:#bed1e5;font-size:.7rem}
 .score-input{width:74px;min-width:0;padding:8px 4px;text-align:center;font-size:1.45rem;font-weight:800;font-variant-numeric:tabular-nums;border:2px solid #44cda8}
 .score-input:focus{outline:2px solid #75c8ef;outline-offset:2px}
+
+/* V5: physical court ranking editor */
+.court-order-editor{display:grid;gap:8px;margin:12px 0}.court-order-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid #334155;border-radius:10px}.court-order-row strong{flex:1}.court-order-rank{min-width:64px;font-size:.85rem;font-weight:700}.court-order-buttons{display:flex;gap:6px}.court-order-buttons button{min-width:38px}
+
+/* V10: sky-blue TOP court score sheet, including empty top court */
+.court.top-court{background:#a8dcf7;border:2px solid #61b7e6;color:#102d44;box-shadow:0 0 0 2px rgba(117,200,239,.14)}
+.court.top-court .court-head b{color:#073b5a}
+.court.top-court .team{background:#d6f1ff;color:#102d44;border:1px solid #8fcbe9}
+.court.top-court .muted,.court.top-court .hint,.court.top-court .clock,.court.top-court .empty{color:#295772}
+.court.top-court .pill{background:#4d99c7;color:#fff}
+.court.top-court .pill.live{background:#167b62;color:#fff}
+.court.top-court .score-input{background:#fff;color:#0d2a40;border-color:#64afd5}
+.gender-tag{display:inline-flex;align-items:center;justify-content:center;min-width:22px;padding:2px 5px;border-radius:5px;background:#2d5878;color:#d9f3ff;font-weight:750;font-size:.75rem}
