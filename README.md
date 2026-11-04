@@ -1,96 +1,14 @@
-# OGX Smart Ladder — free browser prototype
+# OGX Smart Ladder V12 — Sporty Fun Pro
 
-A no-build HTML/CSS/JavaScript pickleball ladder manager. No server, dependencies or API keys needed.
+Static offline-capable browser app. Open index.html or publish all five files together to GitHub Pages.
 
-## Start
-Open `index.html` in a modern browser. Add 4+ players or choose **Load demo players**. The app automatically fills free courts when **Auto-fill empty courts** is enabled. Tap +1 / −1 to score, **Pause** to stop the match clock and disable scoring, and **Finish** to confirm the result and rotate players.
+## V12 changes
+- Sporty Fun Pro dashboard with fruit graphics, large cards and responsive navigation tabs.
+- TOP-ranked court is sky blue (#A8DCF7), regardless of physical court number.
+- Every non-TOP court uses the same soft blue-grey (#E8F0F2).
+- Court status, match scoring and all V11 Smart Court Overflow/Fair Rotation rules are retained.
+- Players, queue, leaderboard/history and settings are separated into accessible tabs.
+- Existing two reset buttons are preserved under Players, with Reset game stats only below Reset session.
 
-## Publish on GitHub Pages
-1. Sign in to https://github.com and create a **public** repository named `ogx-smart-ladder` (do not add a README when creating it).
-2. Choose **Add file → Upload files** and upload `index.html`, `style.css`, and `app.js` (optionally this README).
-3. Commit changes.
-4. Open repository **Settings → Pages**.
-5. Under **Build and deployment**, choose **Deploy from a branch**. Choose branch `main` and folder `/(root)`, then **Save**.
-6. After deployment, visit `https://YOUR-USERNAME.github.io/ogx-smart-ladder/`.
-
-GitHub Pages hosts the front-end only. This prototype stores data in the current browser's localStorage, **not** on GitHub or in a shared database. Two devices will have separate data. Export backups frequently. Do not use this version for official tournament results or DUPR submissions.
-
-## Fair rotation
-The next four waiting players are chosen by fewest games played, then longest waiting. Team splits try to avoid recently repeated partnerships. Each court is automatically refilled after its match is completed or cancelled if enough players are waiting. This is a *social rotating doubles* scheduler, not a strict skill-based challenge ladder.
-
-## Limitations
-- Only one browser/device owns the live session. No multi-device synchronization or login.
-- Timeout buttons record timeout counts, but do not automatically run a countdown or enforce official timeout limits.
-- Score rules are simplified: no side-out scoring, server tracking, end changes, or full competition rules enforcement.
-- No DUPR API connection.
-- No protection against two tabs editing the same session concurrently.
-- The app uses localStorage, so browser storage clearing or private browsing can delete the session.
-- GitHub Pages availability and acceptable-use restrictions apply; for commercial events, use suitable hosting.
-
-## Next upgrade
-Add a hosted database (e.g., Supabase), authentication, server-validated match results, live synchronized scoreboards, timed timeout rules, and robust queue locking.
-
-## Version 2: Court ladder and next queue
-- Physical court labels can be manually entered in ranked order (highest court first).
-- Winning doubles pairs move one court up; losing pairs move one court down. At boundaries they stay assigned to the boundary court.
-- The highest-court winning pair may defend for at most two consecutive matches. After two, they enter the queue and must sit out at least the next top-court match.
-- The Next Match Queue shows waiting pairs, target courts, and top-court rotation status.
-- This is a local-browser prototype, not a synchronized multi-device server.
-- Back up data before replacing files. Existing v1 local storage is imported on first use of v2.
-
-## Manual score entry (V3)
-On each live court, type the exact score for Team A or Team B in its **Score** field, then press Enter or tap outside the field. Scores must be whole numbers from 0 to 999. The +1/−1 buttons remain available. Changes are saved to the local session and are used when **Finish** confirms a match.
-
-
-## V4 additions
-- **Three courts** is now a supported session size (1, 2, 3, 4, 6 or 8). Court order remains highest to lowest and physical labels can be customized.
-- Player registration includes an optional **gender** field (Female, Male, Non-binary, Prefer not to say).
-- Gender appears in the player table and alongside player names in court matchups, the next-match queue and completed match history when disclosed.
-- Existing saved players and imported backups without gender remain supported and display **Not specified** in the player table.
-- Gender does not affect scheduling or team formation.
-
-## V5: Editable court hierarchy
-
-Use the up/down arrows in Session settings to rearrange the physical court numbers. The first entry is always TOP, regardless of its numeric value (for example 8, 3, 12). The ranking order is saved in this browser. Court numbers must be unique nonnegative integers; finish or cancel any live matches before reordering. The existing promotion, relegation, top-court two-round limit, three-court option, gender labels and manual scoring remain available.
-
-## V6: Two-win TOP champions descend to the last court
-- A doubles team that wins twice consecutively on the TOP court is sent directly to the lowest-ranked court, regardless of physical court number.
-- Both champions become individually eligible for new partners at the bottom court; their TOP streak resets.
-- TOP winners after their first win remain together for their second match.
-- Losers descend individually and mix with other incoming or waiting players on lower courts.
-- Court allocations are transactional: insufficient players leave queue assignments unchanged.
-
-## V7: Rest and lower-court substitutions
-
-- Use **Rest** beside a waiting player to remove them from match selection. **Resume** restores their waiting eligibility. Resting does not remove their registration, scores, or statistics.
-- Use **Sub lower** to put an eligible waiting player at the front of the lowest-court candidate pool. The substitution applies only to the next match, never a match already in progress.
-- Lower-court partners are remixed. A player assigned to a non-TOP lower court may fill an otherwise available lowest-court slot. TOP-court reserved pairs are not taken as substitutes.
-- Queue state is saved in browser local storage and included in JSON exports.
-
-## V8 emergency queue name editing
-Waiting players can be renamed from the player list or next-match queue. Duplicate or blank names are rejected. Player IDs, scores, statistics, court assignments, and queue positions are preserved. Completed match history retains the names recorded when each match finished. This is a name correction, not a player substitution.
-
-## V9: Rest directly from the next-match queue
-Every individual waiting player has a Rest button next to their name, including players in reserved pairs. Resting removes their pending pair reservation and excludes them from matchmaking. Resume from the Players table restores waiting eligibility.
-
-## V10: Leaderboard and TOP court improvements
-- Leaderboard gender tags: M for Male and F for Female; other or unspecified genders show no tag.
-- Playing Time is the accumulated duration of completed matches per player, excluding match pauses. In-progress matches do not count until completed; cancelled matches do not count. Historical matches from before V10 have no recorded durations and cannot be reconstructed.
-- Highest-ranked court (court index 0) gets a sky-blue match sheet, independent of its physical court number.
-
-V10 palette refresh: physical Court 4 uses dark greyish-blue (unless ranked TOP); Next Match Queue uses light orange.
-
-V10 color revision: Next Match Queue uses dark marine blue (#17344C) with light text; Court 4 remains greyish-blue and TOP Court remains sky blue.
-
-## Reset game stats only
-Use **Reset game stats only** to erase completed match history, games, wins, losses, points, playing time, active matches and court streaks, while preserving every registered player’s name, gender and ID, court settings and Rest choices. A confirmation warns that current matches are also cleared. Unlike **Reset session**, this action does not delete player registrations. Export a backup first if previous results may be needed.
-
-UI placement: Reset game stats only is directly below Reset session in the Players & waiting queue toolbar.
-
-
-## V11 — Smart Court Overflow & Fair Rotation
-- Normal court allocation is attempted first; if TOP Court remains empty and no TOP contender/defender is waiting, it can host a provisional match for four Court 2 waiting players.
-- Court 2 players are selected by fewest completed games, then lowest recorded playing time, then oldest queue timestamp.
-- Provisional TOP Court matches count for match history, scores, wins/losses, and played time but do not confer TOP defending streaks or promotions. All four players return to their original Court 2 eligibility after completion or cancellation.
-- Resting and already-playing players cannot be borrowed. The TOP Court is never interrupted, and pending TOP contender/defender reservations prevent overflow.
-- Cumulative leaderboard playing time now displays HH:MM:SS.
+## Important
+V12 changes presentation only; it does not reset or migrate local storage. Session data is stored in the same browser as V11. Export a backup before updating.
