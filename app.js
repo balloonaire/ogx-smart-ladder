@@ -112,6 +112,21 @@ $('saveCourtLabels').addEventListener('click',()=>{const v=$('courtLabels').valu
 for(const k of ['target','winBy','cap'])$(k).addEventListener('change',e=>{state.settings[k]=Number(e.target.value);save();render();});
 $('autoFill').addEventListener('change',e=>{state.settings.autoFill=e.target.checked;autoFill();save();render();});
 $('demoBtn').addEventListener('click',()=>{for(const name of ['Kevin','Alicia','Peter','Jamie','Daniel','Cheryl','Adam','Ern','Hao Yi','Matthew','Lee','John'])if(!state.players.some(p=>p.name.toLowerCase()===name.toLowerCase()))state.players.push({id:uid(),name,gender:'',status:'waiting',queuedAt:now(),targetCourt:null,topStreak:0,games:0,wins:0,losses:0,pointsFor:0,pointsAgainst:0,playedMs:0});autoFill();save();render();});
+$('resetStatsBtn').addEventListener('click',()=>{
+ const active=state.courts.some(Boolean);
+ const message='Reset ALL match statistics and game history?\n\nThis will clear completed games, wins, losses, points, playing time, current scores, live matches, queue pairings and top-court streaks.\n\nAll registered player names, gender information, player IDs, resting choices, court labels and session settings will be kept.'+(active?'\n\nWARNING: Matches currently in progress will also be cleared.':'');
+ if(!confirm(message))return;
+ const timestamp=now();
+ for(const p of state.players){
+   p.games=0;p.wins=0;p.losses=0;p.pointsFor=0;p.pointsAgainst=0;p.playedMs=0;p.topStreak=0;
+   p.substitute=false;p.targetCourt=null;p.queuedAt=timestamp;
+   p.status=p.status==='resting'?'resting':'waiting';
+ }
+ state.courts=Array(state.courts.length).fill(null);
+ state.history=[];state.pendingPairs=[];state.lastPairs=[];state.topCompleted=0;
+ // Deliberately do not auto-fill: organizer can start fresh games after resetting.
+ save();render();
+});
 $('resetBtn').addEventListener('click',()=>{if(confirm('Delete all local session data?')){state=fresh();save();render();}});
 $('exportBtn').addEventListener('click',()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));a.href=url;a.download='ogx-ladder-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 $('importFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{const d=JSON.parse(await file.text());if(!Array.isArray(d.players)||!Array.isArray(d.courts)||!Array.isArray(d.history)||!d.settings)throw Error('Invalid backup');if(!confirm('Replace the current browser session?'))return;state={...fresh(),...d};state.courtNames=Array.isArray(d.courtNames)&&d.courtNames.length===d.courts.length?d.courtNames:d.courts.map((_,i)=>String(i+1));state.pendingPairs=Array.isArray(d.pendingPairs)?d.pendingPairs:[];state.players.forEach(p=>{p.gender=typeof p.gender==='string'?p.gender:'';p.topStreak=p.topStreak||0;p.targetCourt=Number.isInteger(p.targetCourt)?p.targetCourt:null;p.substitute=Boolean(p.substitute);p.playedMs=Number.isFinite(Number(p.playedMs))?Math.max(0,Number(p.playedMs)):0;});save();render();}catch(err){alert('Import failed: '+err.message);}finally{e.target.value='';}});
