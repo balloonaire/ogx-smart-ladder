@@ -84,3 +84,5 @@ V10 color revision: Next Match Queue uses dark marine blue (#17344C) with light 
 
 ## Reset game stats only
 Use **Reset game stats only** to erase completed match history, games, wins, losses, points, playing time, active matches and court streaks, while preserving every registered player’s name, gender and ID, court settings and Rest choices. A confirmation warns that current matches are also cleared. Unlike **Reset session**, this action does not delete player registrations. Export a backup first if previous results may be needed.
+
+UI placement: Reset game stats only is directly below Reset session in the Players & waiting queue toolbar.

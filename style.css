@@ -32,3 +32,7 @@
 .panel.next-match-queue td,.panel.next-match-queue th{border-bottom-color:#41627b}
 .panel.next-match-queue td{color:#edf6ff}
 .panel.next-match-queue .secondary{background:#355e7a;color:#fff;border-color:#658aa4}
+
+/* Keep both reset options together, with stats reset directly below session reset. */
+.reset-button-stack{display:flex;flex-direction:column;align-items:stretch;gap:8px;margin-left:auto}
+.reset-button-stack button{width:100%}
