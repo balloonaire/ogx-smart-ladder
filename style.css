@@ -201,3 +201,9 @@ button:not(.danger):not(.secondary):not(.view-tab),.button:not(.secondary){backg
 .bulk-tick{display:inline-flex;align-items:center;margin-right:6px;vertical-align:middle}
 .bulk-tick input{width:18px;height:18px;accent-color:#c4f08d;cursor:pointer}
 @media(max-width:640px){.quick-attendance-toolbar>*{flex:1 1 auto}}
+
+/* V15 live status and fixed partners */
+.court .pill.live,.court.top-court .pill.live,.court.standard-court .pill.live,.court.court-four .pill.live{background:#f01934!important;color:#fff!important;font-weight:900;letter-spacing:.08em;box-shadow:0 0 0 2px rgba(240,25,52,.2)}
+.fixed-pair-label{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;margin-right:6px}
+.fixed-pair-label input{accent-color:#c4f08d;width:17px;height:17px}
+.fixed-partner-select{font-size:.8rem;max-width:150px;padding:6px}

@@ -44,3 +44,11 @@ The Players page includes **Save regular players**, **Load regular players**, **
 - Select all visible respects the active search filter; names hidden by search are not selected automatically.
 - Live-match participants cannot be selected or have attendance changed.
 - Changing a waiting player to NO SHOW or Pending removes that player from queued pairs. Existing scores and matches remain unchanged.
+
+## V15 — Fixed partners and court visibility
+- Court & Live Scores shows player names without gender labels; gender remains available in the Players page.
+- LIVE badge is bright red on every court.
+- In Players, tick Fixed and choose the partner in the adjacent dropdown. Pairing is reciprocal and persists in session storage/backups.
+- Uncheck Fixed to unlink both players. Only players not currently in a match can be paired.
+- Normal match selection keeps mutually fixed partners on the same team, and skips a fixed player if their partner is not eligible. Dynamic overflow does not borrow fixed partners.
+- Existing TOP-court defender/promoted pair reservations retain ladder precedence; these may supersede fixed pairing until the reserved match completes.
