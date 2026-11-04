@@ -193,3 +193,11 @@ button:not(.danger):not(.secondary):not(.view-tab),.button:not(.secondary){backg
 .attendance-tools input[type=checkbox],#attendanceBody input[type=checkbox]{width:18px;height:18px;accent-color:#bfe987}
 #attendanceBody tr[hidden],#playersBody tr[hidden],#nextQueue tr[hidden]{display:none!important}
 @media(max-width:600px){.attendance-tools{align-items:stretch}.attendance-tools button{flex:1 1 40%}}
+
+/* V14: shared bulk attendance selection on Players and Next Match Queue */
+.quick-attendance-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:12px 0;padding:12px;border:1px solid #698797;border-radius:12px;background:#1a3445}
+.quick-attendance-toolbar strong{font-size:.85rem;color:#c4f08d}
+.quick-attendance-toolbar select,.quick-attendance-toolbar button{min-height:36px}
+.bulk-tick{display:inline-flex;align-items:center;margin-right:6px;vertical-align:middle}
+.bulk-tick input{width:18px;height:18px;accent-color:#c4f08d;cursor:pointer}
+@media(max-width:640px){.quick-attendance-toolbar>*{flex:1 1 auto}}

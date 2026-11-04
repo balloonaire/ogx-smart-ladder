@@ -163,12 +163,32 @@ function setManualScore(i,t,raw){
 function pause(i){const m=state.courts[i];if(!m)return;if(m.pausedAt){m.pausedMs+=now()-m.pausedAt;m.pausedAt=null;}else m.pausedAt=now();save();render();}
 function timeout(i,t){const m=state.courts[i];if(!m)return;m.timeouts[t]++;save();render();}
 const attendanceSelection=new Set();
+function tickMarkup(p){
+ return `<label class="bulk-tick"><input type="checkbox" data-attendance-check="${p.id}" aria-label="Select ${esc(p.name)}" ${attendanceSelection.has(p.id)?'checked':''} ${p.status==='playing'?'disabled title="Player is currently playing"':''}></label>`;
+}
+function syncAllAttendanceChecks(){
+ document.querySelectorAll('input[data-attendance-check]').forEach(c=>{c.checked=attendanceSelection.has(c.dataset.attendanceCheck);});
+}
+function updateQuickAttendanceUI(){
+ for(const bar of document.querySelectorAll('.quick-attendance-toolbar')){
+  const scope=bar.querySelector('[data-select-all-scope]').dataset.selectAllScope;
+  const body=$(scope==='players'?'playersBody':'nextQueue');
+  const eligible=[...body.querySelectorAll('tr:not([hidden]) input[data-attendance-check]:not(:disabled)')];
+  const checked=eligible.filter(c=>attendanceSelection.has(c.dataset.attendanceCheck)).length;
+  const all=bar.querySelector('[data-select-all-scope]');
+  all.checked=eligible.length>0&&checked===eligible.length;
+  all.indeterminate=checked>0&&checked<eligible.length;
+  bar.querySelector('[data-selected-count]').textContent=`${attendanceSelection.size} selected`;
+ }
+}
+
 function updateAttendanceSelectionUI(){
  const checks=[...document.querySelectorAll('#attendanceBody input[data-attendance-check]:not(:disabled)')];
  const selected=checks.filter(c=>c.checked).length;
  $('selectedAttendanceCount').textContent=`${attendanceSelection.size} selected`;
  $('selectAllAttendance').checked=checks.length>0&&selected===checks.length;
  $('selectAllAttendance').indeterminate=selected>0&&selected<checks.length;
+ updateQuickAttendanceUI();
 }
 function filterRows(){
  const norm=v=>v.trim().toLocaleLowerCase();
@@ -182,10 +202,10 @@ function render(){const s=state.settings;$('courtCount').value=String(state.cour
  $('courtLabels').value=state.courtNames.join(', ');
  $('courtOrderEditor').innerHTML=state.courtNames.map((name,i)=>`<div class="court-order-row"><span class="court-order-rank">${i===0?'TOP':`Rank ${i+1}`}</span><strong>Court ${esc(name)}</strong><div class="court-order-buttons"><button class="small secondary" data-action="move-court" data-index="${i}" data-direction="-1" aria-label="Move Court ${esc(name)} higher" ${i===0||state.courts.some(Boolean)?'disabled':''}>↑</button><button class="small secondary" data-action="move-court" data-index="${i}" data-direction="1" aria-label="Move Court ${esc(name)} lower" ${i===state.courtNames.length-1||state.courts.some(Boolean)?'disabled':''}>↓</button></div></div>`).join('');
  const queued=waitingPlayers().length,resting=state.players.filter(p=>p.status==='resting').length;$('playerSummary').textContent=`${state.players.length} registered · ${state.players.filter(p=>p.attendance==='show').length} SHOW · ${state.players.filter(p=>p.attendance==='pending').length} Pending · ${state.players.filter(p=>p.attendance==='no-show').length} NO SHOW · ${queued} waiting · ${resting} resting`;
- $('playersBody').innerHTML=state.players.map(p=>`<tr data-player-row data-search-name="${esc(p.name.toLocaleLowerCase())}"><td>${esc(p.name)}</td><td>${esc(genderLabel(p))}</td><td><select class="attendance-select" data-attendance-id="${p.id}" aria-label="Attendance for ${esc(p.name)}" ${p.status==='playing'?'disabled title="Finish match before changing attendance"':''}><option value="pending" ${p.attendance==='pending'?'selected':''}>Pending</option><option value="show" ${p.attendance==='show'?'selected':''}>SHOW</option><option value="no-show" ${p.attendance==='no-show'?'selected':''}>NO SHOW</option></select></td><td>${p.status==='playing'?'On court':p.status==='resting'?'Resting':p.substitute?'Waiting · substitute':'Waiting'}</td><td data-wait="${p.id}">${p.status==='waiting'&&p.attendance==='show'?fmt(now()-p.queuedAt):'—'}</td><td>${p.games}</td><td>${p.wins}–${p.losses}</td><td><button class="small secondary" data-action="${p.status==='resting'?'resume-player':'rest-player'}" data-id="${p.id}" ${p.status==='playing'?'disabled':''}>${p.status==='resting'?'Resume':'Rest'}</button> ${p.status==='waiting'&&state.courts.length>1?`<button class="small secondary" data-action="substitute" data-id="${p.id}" ${p.substitute?'disabled':''}>${p.substitute?'Sub queued':'Sub lower'}</button>`:''} <button class="small secondary" data-action="edit-name" data-id="${p.id}" ${p.status!=='waiting' ? 'disabled' : ''}>Edit name</button> <button class="small danger" data-action="remove" data-id="${p.id}" ${p.status==='playing'?'disabled':''}>Remove</button></td></tr>`).join('')||'<tr><td colspan="8" class="muted">Add players to begin.</td></tr>';
+ $('playersBody').innerHTML=state.players.map(p=>`<tr data-player-row data-search-name="${esc(p.name.toLocaleLowerCase())}"><td>${tickMarkup(p)}</td><td>${esc(p.name)}</td><td>${esc(genderLabel(p))}</td><td><select class="attendance-select" data-attendance-id="${p.id}" aria-label="Attendance for ${esc(p.name)}" ${p.status==='playing'?'disabled title="Finish match before changing attendance"':''}><option value="pending" ${p.attendance==='pending'?'selected':''}>Pending</option><option value="show" ${p.attendance==='show'?'selected':''}>SHOW</option><option value="no-show" ${p.attendance==='no-show'?'selected':''}>NO SHOW</option></select></td><td>${p.status==='playing'?'On court':p.status==='resting'?'Resting':p.substitute?'Waiting · substitute':'Waiting'}</td><td data-wait="${p.id}">${p.status==='waiting'&&p.attendance==='show'?fmt(now()-p.queuedAt):'—'}</td><td>${p.games}</td><td>${p.wins}–${p.losses}</td><td><button class="small secondary" data-action="${p.status==='resting'?'resume-player':'rest-player'}" data-id="${p.id}" ${p.status==='playing'?'disabled':''}>${p.status==='resting'?'Resume':'Rest'}</button> ${p.status==='waiting'&&state.courts.length>1?`<button class="small secondary" data-action="substitute" data-id="${p.id}" ${p.substitute?'disabled':''}>${p.substitute?'Sub queued':'Sub lower'}</button>`:''} <button class="small secondary" data-action="edit-name" data-id="${p.id}" ${p.status!=='waiting' ? 'disabled' : ''}>Edit name</button> <button class="small danger" data-action="remove" data-id="${p.id}" ${p.status==='playing'?'disabled':''}>Remove</button></td></tr>`).join('')||'<tr><td colspan="9" class="muted">Add players to begin.</td></tr>';
  const sorted=[...state.pendingPairs].filter(q=>q.ids.every(id=>player(id)?.status==='waiting'&&player(id)?.attendance==='show')).sort((a,b)=>(a.target??999)-(b.target??999)||b.priority-a.priority||a.at-b.at);
  const reserved=new Set(sorted.flatMap(q=>q.ids));const singles=waitingPlayers().filter(p=>!reserved.has(p.id)).sort((a,b)=>a.queuedAt-b.queuedAt);
- $('nextQueue').innerHTML=sorted.map((q,k)=>`<tr data-queue-row data-search-name="${esc(q.ids.map(pid=>displayName(pid)).join(" ").toLocaleLowerCase())}"><td>${k+1}</td><td>${q.ids.map(pid=>`<span>${esc(displayName(pid))} <button class="small secondary" data-action="edit-name" data-id="${pid}">Edit</button> <button class="small secondary" data-action="rest-player" data-id="${pid}">Rest</button></span>`).join(' / ')}</td><td>${q.target===null?'Any available court':esc(rankName(q.target))}</td><td>${q.target===0&&q.priority===10?'Top defender':'Waiting'}</td></tr>`).join('')+singles.map((p,k)=>`<tr data-queue-row data-search-name="${esc(p.name.toLocaleLowerCase())}"><td>${sorted.length+k+1}</td><td>${esc(displayName(p.id))} <button class="small secondary" data-action="edit-name" data-id="${p.id}">Edit</button> <button class="small secondary" data-action="rest-player" data-id="${p.id}">Rest</button></td><td>${p.targetCourt===null?'Any available court':esc(rankName(p.targetCourt))}</td><td>${p.substitute?'Priority substitute':'Mix with incoming players'}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">No players waiting.</td></tr>';
+ $('nextQueue').innerHTML=sorted.map((q,k)=>`<tr data-queue-row data-search-name="${esc(q.ids.map(pid=>displayName(pid)).join(" ").toLocaleLowerCase())}"><td>${k+1}</td><td>${q.ids.map(pid=>`<span>${tickMarkup(player(pid))} ${esc(displayName(pid))} <button class="small secondary" data-action="edit-name" data-id="${pid}">Edit</button> <button class="small secondary" data-action="rest-player" data-id="${pid}">Rest</button></span>`).join(' / ')}</td><td>${q.target===null?'Any available court':esc(rankName(q.target))}</td><td>${q.target===0&&q.priority===10?'Top defender':'Waiting'}</td></tr>`).join('')+singles.map((p,k)=>`<tr data-queue-row data-search-name="${esc(p.name.toLocaleLowerCase())}"><td>${sorted.length+k+1}</td><td>${tickMarkup(p)} ${esc(displayName(p.id))} <button class="small secondary" data-action="edit-name" data-id="${p.id}">Edit</button> <button class="small secondary" data-action="rest-player" data-id="${p.id}">Rest</button></td><td>${p.targetCourt===null?'Any available court':esc(rankName(p.targetCourt))}</td><td>${p.substitute?'Priority substitute':'Mix with incoming players'}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">No players waiting.</td></tr>';
  for(const id of [...attendanceSelection])if(!state.players.some(p=>p.id===id&&p.status!=='playing'))attendanceSelection.delete(id);
  $('attendanceBody').innerHTML=state.players.map(p=>`<tr data-attendance-row data-search-name="${esc(p.name.toLocaleLowerCase())}"><td><input type="checkbox" data-attendance-check="${p.id}" aria-label="Select ${esc(p.name)}" ${attendanceSelection.has(p.id)?'checked':''} ${p.status==='playing'?'disabled title="Player is on court"':''}></td><td>${esc(p.name)}</td><td>${esc(genderLabel(p))}</td><td><select data-attendance-id="${p.id}" aria-label="Attendance for ${esc(p.name)}" ${p.status==='playing'?'disabled':''}><option value="pending" ${p.attendance==='pending'?'selected':''}>Pending</option><option value="show" ${p.attendance==='show'?'selected':''}>SHOW</option><option value="no-show" ${p.attendance==='no-show'?'selected':''}>NO SHOW</option></select></td><td>${p.status==='playing'?'On court':p.status==='resting'?'Resting':'Waiting'}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">No registered players.</td></tr>';
  filterRows();
@@ -196,11 +216,28 @@ function render(){const s=state.settings;$('courtCount').value=String(state.cour
 }
 $('addForm').addEventListener('submit',e=>{e.preventDefault();const name=$('playerName').value.trim(),gender=$('playerGender').value;if(!name)return;if(state.players.some(p=>p.name.toLowerCase()===name.toLowerCase())){alert('Name already registered.');return;}state.players.push({id:uid(),name,gender,attendance:'pending',status:'waiting',queuedAt:now(),targetCourt:null,topStreak:0,games:0,wins:0,losses:0,pointsFor:0,pointsAgainst:0,playedMs:0});$('playerName').value='';$('playerGender').value='';autoFill();save();render();});
 for(const id of ['playersSearch','queueSearch','attendanceSearch'])$(id).addEventListener('input',filterRows);
-$('attendanceBody').addEventListener('change',e=>{
+document.addEventListener('change',e=>{
  const checkbox=e.target.closest('input[data-attendance-check]');if(!checkbox)return;
  if(checkbox.checked)attendanceSelection.add(checkbox.dataset.attendanceCheck);
  else attendanceSelection.delete(checkbox.dataset.attendanceCheck);
- updateAttendanceSelectionUI();
+ syncAllAttendanceChecks();updateAttendanceSelectionUI();
+});
+document.querySelectorAll('.quick-attendance-toolbar').forEach(bar=>{
+ bar.querySelector('[data-select-all-scope]').addEventListener('change',e=>{
+  const scope=e.target.dataset.selectAllScope,body=$(scope==='players'?'playersBody':'nextQueue');
+  for(const checkbox of body.querySelectorAll('tr:not([hidden]) input[data-attendance-check]:not(:disabled)')){
+   if(e.target.checked)attendanceSelection.add(checkbox.dataset.attendanceCheck);
+   else attendanceSelection.delete(checkbox.dataset.attendanceCheck);
+  }
+  syncAllAttendanceChecks();updateAttendanceSelectionUI();
+ });
+ bar.querySelector('[data-apply-quick-attendance]').addEventListener('click',()=>{
+  $('bulkAttendanceValue').value=bar.querySelector('[data-quick-attendance-value]').value;
+  $('applyBulkAttendance').click();
+ });
+ bar.querySelector('[data-clear-quick-attendance]').addEventListener('click',()=>{
+  attendanceSelection.clear();syncAllAttendanceChecks();updateAttendanceSelectionUI();
+ });
 });
 $('selectAllAttendance').addEventListener('change',e=>{
  for(const checkbox of $('attendanceBody').querySelectorAll('input[data-attendance-check]:not(:disabled)')){
@@ -211,7 +248,7 @@ $('selectAllAttendance').addEventListener('change',e=>{
  }
  updateAttendanceSelectionUI();
 });
-$('clearAttendanceSelection').addEventListener('click',()=>{attendanceSelection.clear();for(const checkbox of $('attendanceBody').querySelectorAll('input[data-attendance-check]'))checkbox.checked=false;updateAttendanceSelectionUI();});
+$('clearAttendanceSelection').addEventListener('click',()=>{attendanceSelection.clear();syncAllAttendanceChecks();updateAttendanceSelectionUI();});
 $('applyBulkAttendance').addEventListener('click',()=>{
  const value=$('bulkAttendanceValue').value;
  if(!['show','no-show','pending'].includes(value))return;

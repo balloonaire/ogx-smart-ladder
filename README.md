@@ -37,3 +37,10 @@ The Players page includes **Save regular players**, **Load regular players**, **
 - Search player names in the **Players** tab, and separately search waiting-player names in the **Next match queue** on the Courts tab. Both searches filter displayed rows only, never affect scheduling.
 - Attendance tab also has its own search and single-player attendance dropdowns. Select all only applies to currently visible eligible rows; selections survive search changes until applied or cleared.
 - Data continues to save locally in the browser. The regular-player registry and export/import remain available.
+
+## V14: One-go bulk attendance on Players and Waiting Queue
+- Tick any number of names directly in the Players list or Next Match Queue. Paired waiting players each have their own checkbox.
+- Selections are shared between Players, Waiting Queue, and Attendance tabs. Choose SHOW, NO SHOW, or Pending and Apply to selected once.
+- Select all visible respects the active search filter; names hidden by search are not selected automatically.
+- Live-match participants cannot be selected or have attendance changed.
+- Changing a waiting player to NO SHOW or Pending removes that player from queued pairs. Existing scores and matches remain unchanged.
