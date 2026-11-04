@@ -79,3 +79,5 @@ Every individual waiting player has a Rest button next to their name, including 
 - Highest-ranked court (court index 0) gets a sky-blue match sheet, independent of its physical court number.
 
 V10 palette refresh: physical Court 4 uses dark greyish-blue (unless ranked TOP); Next Match Queue uses light orange.
+
+V10 color revision: Next Match Queue uses dark marine blue (#17344C) with light text; Court 4 remains greyish-blue and TOP Court remains sky blue.
