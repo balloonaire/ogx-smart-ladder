@@ -16,3 +16,12 @@ V12 changes presentation only; it does not reset or migrate local storage. Sessi
 V12 layout update: The Next Match Queue is directly below the Courts section in the same Courts view. The separate Queue tab is removed; all queue controls and game logic remain unchanged.
 
 V12 layout update: Courts and Next Match Queue share the Courts tab. Players, Leaderboard, and Match History share the Players tab. The separate Leaderboard tab is removed.
+
+
+## Dynamic Court Allocation update
+- Automatically attempts regular court assignments before filling idle courts with four players from a busy court's waiting list.
+- Prioritizes adjacent court queues, fewer games, less accumulated playing time and longest waiting time.
+- TOP defenders and promoted contenders remain protected; overflow matches are provisional and do not confer TOP promotion.
+- Players return to their original court eligibility when an overflow match completes or is cancelled.
+- Works across any configured number of courts; requires four eligible waiting players assigned to the same currently occupied court.
+- Local browser data is retained; export a backup before upgrading.

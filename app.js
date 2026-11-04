@@ -61,35 +61,47 @@ function takePairsForCourt(i){
  state.pendingPairs=state.pendingPairs.filter(q=>!q.ids.some(id=>assigned.has(id)));
  return selected;
 }
-// Court 1 overflow: temporarily borrow four waiting Court 2 players without awarding TOP promotion.
-// A queued TOP contender or defender always takes priority over an overflow match.
-function takeTopOverflow(){
- if(state.courts[0]||state.courts.length<2)return null;
+// Dynamic Court Allocation: normal ladder placement always runs first.
+// Borrow waiting players only when their assigned court is occupied, protecting TOP reservations.
+function takeDynamicOverflow(i){
+ if(state.courts[i]||state.courts.length<2)return null;
  cleanPairs();
- if(state.pendingPairs.some(q=>q.target===0))return null;
- if(waitingPlayers().some(p=>p.targetCourt===0))return null;
- const pool=waitingPlayers().filter(p=>p.targetCourt===1);
- if(pool.length<4)return null;
+ // Never use an idle TOP court while a defender or promoted contender is reserved.
+ if(i===0&&(state.pendingPairs.some(q=>q.target===0)||waitingPlayers().some(p=>p.targetCourt===0)))return null;
+ const reservedTop=new Set(state.pendingPairs.filter(q=>q.target===0).flatMap(q=>q.ids));
+ const eligible=waitingPlayers().filter(p=>!reservedTop.has(p.id)&&Number.isInteger(p.targetCourt)&&p.targetCourt!==i&&p.targetCourt>=0&&p.targetCourt<state.courts.length&&Boolean(state.courts[p.targetCourt]));
+ // Borrow from ONE blocked destination queue, never combine unrelated ladder levels.
+ const groups=new Map();
+ for(const p of eligible){if(!groups.has(p.targetCourt))groups.set(p.targetCourt,[]);groups.get(p.targetCourt).push(p);}
+ const candidates=[...groups.entries()].filter(([,players])=>players.length>=4);
+ if(!candidates.length)return null;
+ // Adjacent ranked courts first; then prioritize the longest-waiting eligible group.
+ candidates.sort((a,b)=>Math.abs(a[0]-i)-Math.abs(b[0]-i)||Math.min(...a[1].map(p=>p.queuedAt))-Math.min(...b[1].map(p=>p.queuedAt)));
+ const [sourceCourt,pool]=candidates[0];
  pool.sort((a,b)=>a.games-b.games||playedTime(a)-playedTime(b)||a.queuedAt-b.queuedAt);
  const chosen=pool.slice(0,4),ids=new Set(chosen.map(p=>p.id));
  const originalTargets=Object.fromEntries(chosen.map(p=>[p.id,p.targetCourt]));
  state.pendingPairs=state.pendingPairs.filter(q=>!q.ids.some(id=>ids.has(id)));
  const teams=[[chosen[0].id,chosen[2].id],[chosen[1].id,chosen[3].id]];
  chosen.forEach(p=>{p.status='playing';p.substitute=false;});
- return {teams,originalTargets};
+ return {teams,originalTargets,sourceCourt};
 }
-function startTopOverflow(){
- const selected=takeTopOverflow();if(!selected)return false;
+function startDynamicOverflow(i){
+ const selected=takeDynamicOverflow(i);if(!selected)return false;
  const teams=selected.teams;
- state.courts[0]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0],overflow:true,originalTargets:selected.originalTargets};
+ state.courts[i]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0],overflow:true,originalTargets:selected.originalTargets,overflowSource:selected.sourceCourt};
  state.lastPairs.push(...teams.map(t=>[...t].sort().join('|')));state.lastPairs=state.lastPairs.slice(-16);
  save();return true;
 }
-function startMatch(i,allowOverflow=true){if(state.courts[i])return false;const teams=takePairsForCourt(i);if(!teams)return i===0&&allowOverflow?startTopOverflow():false;teams.flat().forEach(id=>{player(id).status='playing';player(id).substitute=false;});
-  state.courts[i]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0]};
-  state.lastPairs.push(...teams.map(t=>[...t].sort().join('|')));state.lastPairs=state.lastPairs.slice(-16);save();return true;
+function startMatch(i,allowOverflow=true){if(state.courts[i])return false;const teams=takePairsForCourt(i);if(!teams)return allowOverflow?startDynamicOverflow(i):false;teams.flat().forEach(id=>{player(id).status='playing';player(id).substitute=false;});
+ state.courts[i]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0]};
+ state.lastPairs.push(...teams.map(t=>[...t].sort().join('|')));state.lastPairs=state.lastPairs.slice(-16);save();return true;
 }
-function autoFill(){if(!state.settings.autoFill)return;for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startMatch(i,false);if(!state.courts[0])startTopOverflow();}
+function autoFill(){if(!state.settings.autoFill)return;
+ // Normal placements take priority on ALL courts before any overflow borrowing.
+ for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startMatch(i,false);
+ for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startDynamicOverflow(i);
+}
 function winningTeam(m){const [a,b]=m.scores,{target,winBy,cap}=state.settings;return (a>=target&&a-b>=winBy)||(cap>0&&a>=cap&&a>b)?0:(b>=target&&b-a>=winBy)||(cap>0&&b>=cap&&b>a)?1:null;}
 function finish(i){const m=state.courts[i];if(!m)return;const qualified=winningTeam(m);if(qualified===null&&!confirm('Winning condition not reached. Confirm the leading team as winner?'))return;
  const w=qualified===null?(m.scores[0]>m.scores[1]?0:m.scores[1]>m.scores[0]?1:null):qualified;if(w===null){alert('Cannot finish a tied match.');return;}
@@ -100,7 +112,7 @@ function finish(i){const m=state.courts[i];if(!m)return;const qualified=winningT
  let note='';
  if(m.overflow){
    m.teams.flat().forEach(id=>{const p=player(id);p.topStreak=0;queuePlayer(p,m.originalTargets?.[id]??1);});
-   note='Court 1 overflow (provisional): results and playing time recorded; original Court 2 eligibility retained';
+   note=`Dynamic overflow on ${rankName(i)} (from ${rankName(m.overflowSource??1)}): results recorded; original ladder eligibility retained`;
  }else if(i===0){state.topCompleted++;const newStreak=Math.max(...winIds.map(id=>player(id)?.topStreak||0))+1;
    if(newStreak>=2){winIds.forEach(id=>{player(id).topStreak=0;queuePlayer(player(id),state.courts.length-1);});note=`Top champions won 2 consecutive rounds and descend directly to ${rankName(state.courts.length-1)} for new partners`;}
    else{winIds.forEach(id=>{player(id).topStreak=newStreak;});queuePair(winIds,0,10);note=`Top winners defend: ${newStreak}/2`;}
