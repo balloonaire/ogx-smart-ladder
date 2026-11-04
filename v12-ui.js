@@ -28,4 +28,15 @@
  const obs=new MutationObserver(stats);
  targets.forEach(id=>{const el=document.getElementById(id);if(el)obs.observe(el,{childList:true,subtree:true})});
  stats();
+ const statusEl=document.getElementById('courtLiveSummary');
+ if(statusEl){
+  const refreshStatus=()=>{
+   const courtEls=[...document.querySelectorAll('#courts .court')];
+   const active=courtEls.filter(c=>c.querySelector('.pill.live')).length;
+   statusEl.textContent=`${active} live match${active===1?'':'es'} · ${Math.max(0,courtEls.length-active)} court${courtEls.length-active===1?'':'s'} available`;
+  };
+  const courtEl=document.getElementById('courts');
+  if(courtEl)new MutationObserver(refreshStatus).observe(courtEl,{childList:true,subtree:true});
+  refreshStatus();
+ }
 })();

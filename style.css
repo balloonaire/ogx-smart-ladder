@@ -130,3 +130,47 @@ footer{color:#899CAD}
 @media(max-width:650px){.prestige-ribbon{font-size:.53rem;letter-spacing:.1em}.panel{padding:15px}.quick-stats{gap:8px}.quick-stats>div{padding:11px}.view-tab{flex:1;padding:11px 8px}}
 
 .attendance-select{min-width:108px;padding:8px;border:1px solid #a9b7c4;border-radius:9px;background:#fff;color:#182b40;font-weight:700}
+
+.replacement-controls{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.replacement-controls button{font-size:11px;white-space:normal}
+
+/* ATELIER PRO — editorial, architectural sports graphics; replaces the prior palette. */
+:root{--gold:#C4F08D;--ink:#101E2B;--paper:#EAF0F1;--sky:#A8DCF7;color-scheme:dark}
+body{background:linear-gradient(145deg,#08111D 0%,#13253A 48%,#0A1624 100%);color:#F3F6F6}
+header{background:#0C1827;border-bottom:1px solid #3A5063;padding-top:26px;padding-bottom:25px}
+header h1{font-weight:850;letter-spacing:-.055em;font-size:clamp(1.7rem,4vw,3.1rem);line-height:1.02}
+header h1 .accent{color:#C4F08D}
+header p{color:#B6C5D2;letter-spacing:.09em;font-size:.72rem}
+.eyebrow{color:#C4F08D;letter-spacing:.23em}
+.prestige-ribbon{background:#C4F08D;color:#0E2434;letter-spacing:.19em;border:0;font-weight:850}
+.graphic-banner{max-width:1200px;margin:18px auto 8px;min-height:205px;border:1px solid #3A566B;border-radius:20px;background:radial-gradient(circle at 76% 30%,#284C61,#13283B 42%,#0E1D2E 85%);display:grid;grid-template-columns:1.2fr 1fr;overflow:hidden;position:relative}
+.graphic-banner-copy{padding:28px clamp(20px,4vw,44px);display:flex;flex-direction:column;justify-content:center;gap:10px;z-index:1}
+.graphic-kicker{font-size:.66rem;letter-spacing:.23em;font-weight:800;color:#C4F08D}
+.graphic-banner-copy strong{font-size:clamp(1.65rem,4.4vw,3.1rem);letter-spacing:-.06em;line-height:1.05;color:white}
+.graphic-banner-copy em{font-style:normal;color:#C4F08D}
+.graphic-sub{color:#C2D2DC;font-size:.8rem}
+.graphic-court{position:relative;min-height:190px;transform:perspective(430px) rotateX(28deg) rotateZ(-20deg) scale(.8);border:4px solid #D9F1F2;box-shadow:0 20px 35px #0008, inset 0 0 0 3px #1A576B;background:linear-gradient(90deg,#20657A 0 49.6%,#D8EFF0 49.6% 50.4%,#20657A 50.4%);margin:22px 36px}
+.graphic-court:before,.graphic-court:after{content:"";position:absolute;left:0;right:0;height:3px;background:#D9F1F2;top:25%}
+.graphic-court:after{top:75%}
+.court-net{position:absolute;left:0;right:0;top:49%;height:3px;background:#F4FCFF;box-shadow:0 0 15px #fff;z-index:1}
+.graphic-ball{position:absolute;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#F1FFD8,#C4F08D 58%,#7DB344);top:12%;right:24%;box-shadow:5px 10px 12px #0006}
+.court-mark{position:absolute;bottom:5%;right:6%;font-size:1.3rem;letter-spacing:.14em;color:#D8F1F1;font-weight:900}
+.quick-stats>div{background:#182E42;border:1px solid #365367;border-radius:13px;box-shadow:none}
+.quick-stats strong{color:#F2F7F8;font-weight:850}
+.quick-stats small{color:#AFC5D1;text-transform:uppercase;letter-spacing:.1em;font-size:.64rem}
+.view-tabs{background:#0D1E2D;border:1px solid #354D5D;border-radius:13px}
+.view-tab{font-weight:800;letter-spacing:.025em}
+.view-tab.active{background:#C4F08D;color:#102332}
+.panel{background:#14283A;border:1px solid #334D60;border-radius:15px;box-shadow:0 12px 28px #0002}
+.panel h2{letter-spacing:-.035em;font-size:1.3rem}
+button:not(.danger):not(.secondary):not(.view-tab),.button:not(.secondary){background:#C4F08D;color:#102332;border-color:#B4DC7E}
+.court,.court.standard-court,.court.court-four{background:#EAF0F1;border:1px solid #CAD8DE;color:#1A3548;border-radius:14px;box-shadow:0 8px 18px #0003}
+.court.top-court{background:#A8DCF7;border:2px solid #5DA7CD;color:#15374D;box-shadow:0 8px 20px #0003}
+.court-fruit{background:#DDE6E7;color:#183E51;border:1px solid #B6C9D2;border-radius:8px}
+.court .team,.court.standard-court .team,.court.court-four .team{border-radius:10px;background:#FFF;border:1px solid #CBD9E0}
+.court.top-court .team{background:#E8F7FF}
+.court .pill.live{background:#256A58;color:#FFF}
+.panel.next-match-queue{background:#172F43;border-color:#3A5C72}
+.panel.next-match-queue h2{color:#C4F08D}
+.live-status-bar{display:flex;align-items:center;gap:9px;color:#B9D1DE;font-size:.76rem;letter-spacing:.05em;margin-bottom:13px}
+.live-pulse{width:9px;height:9px;border-radius:50%;background:#C4F08D;box-shadow:0 0 0 4px #C4F08D20}
+@media(max-width:650px){.graphic-banner{margin:12px 12px 5px;grid-template-columns:1fr;min-height:unset}.graphic-banner-copy{padding:22px}.graphic-court{display:none}.graphic-banner-copy strong{font-size:2rem}}
