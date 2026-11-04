@@ -1,5 +1,5 @@
 'use strict';
-// OGX Smart Ladder v10 — court 0 is the highest-ranked court, regardless of its physical label.
+// OGX Smart Ladder v11 — court 0 is the highest-ranked court, regardless of its physical label.
 const KEY='ogx-smart-ladder-v2', OLD='ogx-smart-ladder-v1';
 const $=id=>document.getElementById(id), now=()=>Date.now();
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`;
@@ -13,6 +13,7 @@ for(const p of state.players){p.gender=typeof p.gender==='string'?p.gender:'';p.
 const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=ms=>{let n=Math.max(0,Math.floor(ms/1000));return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`};
+const fmtPlayed=ms=>{let n=Math.max(0,Math.floor(ms/1000));return `${String(Math.floor(n/3600)).padStart(2,'0')}:${String(Math.floor(n%3600/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`};
 const player=id=>state.players.find(p=>p.id===id);
 const genderLabel=p=>p?.gender||'Not specified';
 const genderShort=p=>p?.gender==='Male'?'M':p?.gender==='Female'?'F':'';
@@ -43,7 +44,7 @@ function takePairsForCourt(i){
  const localIds=localPairs.flatMap(q=>q.ids);
  localIds.forEach(id=>reserved.delete(id));
  const available=waitingPlayers().filter(p=>!used.has(p.id)&&!reserved.has(p.id)&&(p.targetCourt===i||p.targetCourt===null||(i===state.courts.length-1&&p.targetCourt>0)));
- available.sort((a,b)=>Number(b.substitute)-Number(a.substitute)||(a.targetCourt===i?0:1)-(b.targetCourt===i?0:1)||a.games-b.games||a.queuedAt-b.queuedAt);
+ available.sort((a,b)=>Number(b.substitute)-Number(a.substitute)||(a.targetCourt===i?0:1)-(b.targetCourt===i?0:1)||a.games-b.games||playedTime(a)-playedTime(b)||a.queuedAt-b.queuedAt);
  const need=4-selected.length*2;
  if(available.length<need)return null; // No queue mutation on failed allocation.
  const picked=available.slice(0,need).map(p=>p.id);
@@ -60,11 +61,35 @@ function takePairsForCourt(i){
  state.pendingPairs=state.pendingPairs.filter(q=>!q.ids.some(id=>assigned.has(id)));
  return selected;
 }
-function startMatch(i){if(state.courts[i])return false;const teams=takePairsForCourt(i);if(!teams)return false;teams.flat().forEach(id=>{player(id).status='playing';player(id).substitute=false;});
+// Court 1 overflow: temporarily borrow four waiting Court 2 players without awarding TOP promotion.
+// A queued TOP contender or defender always takes priority over an overflow match.
+function takeTopOverflow(){
+ if(state.courts[0]||state.courts.length<2)return null;
+ cleanPairs();
+ if(state.pendingPairs.some(q=>q.target===0))return null;
+ if(waitingPlayers().some(p=>p.targetCourt===0))return null;
+ const pool=waitingPlayers().filter(p=>p.targetCourt===1);
+ if(pool.length<4)return null;
+ pool.sort((a,b)=>a.games-b.games||playedTime(a)-playedTime(b)||a.queuedAt-b.queuedAt);
+ const chosen=pool.slice(0,4),ids=new Set(chosen.map(p=>p.id));
+ const originalTargets=Object.fromEntries(chosen.map(p=>[p.id,p.targetCourt]));
+ state.pendingPairs=state.pendingPairs.filter(q=>!q.ids.some(id=>ids.has(id)));
+ const teams=[[chosen[0].id,chosen[2].id],[chosen[1].id,chosen[3].id]];
+ chosen.forEach(p=>{p.status='playing';p.substitute=false;});
+ return {teams,originalTargets};
+}
+function startTopOverflow(){
+ const selected=takeTopOverflow();if(!selected)return false;
+ const teams=selected.teams;
+ state.courts[0]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0],overflow:true,originalTargets:selected.originalTargets};
+ state.lastPairs.push(...teams.map(t=>[...t].sort().join('|')));state.lastPairs=state.lastPairs.slice(-16);
+ save();return true;
+}
+function startMatch(i,allowOverflow=true){if(state.courts[i])return false;const teams=takePairsForCourt(i);if(!teams)return i===0&&allowOverflow?startTopOverflow():false;teams.flat().forEach(id=>{player(id).status='playing';player(id).substitute=false;});
   state.courts[i]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0]};
   state.lastPairs.push(...teams.map(t=>[...t].sort().join('|')));state.lastPairs=state.lastPairs.slice(-16);save();return true;
 }
-function autoFill(){if(!state.settings.autoFill)return;for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startMatch(i);}
+function autoFill(){if(!state.settings.autoFill)return;for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startMatch(i,false);if(!state.courts[0])startTopOverflow();}
 function winningTeam(m){const [a,b]=m.scores,{target,winBy,cap}=state.settings;return (a>=target&&a-b>=winBy)||(cap>0&&a>=cap&&a>b)?0:(b>=target&&b-a>=winBy)||(cap>0&&b>=cap&&b>a)?1:null;}
 function finish(i){const m=state.courts[i];if(!m)return;const qualified=winningTeam(m);if(qualified===null&&!confirm('Winning condition not reached. Confirm the leading team as winner?'))return;
  const w=qualified===null?(m.scores[0]>m.scores[1]?0:m.scores[1]>m.scores[0]?1:null):qualified;if(w===null){alert('Cannot finish a tied match.');return;}
@@ -73,15 +98,18 @@ function finish(i){const m=state.courts[i];if(!m)return;const qualified=winningT
  state.pendingPairs=state.pendingPairs.filter(q=>!q.ids.some(id=>m.teams.flat().includes(id))); 
  for(let t=0;t<2;t++)for(const id of m.teams[t]){const p=player(id);if(!p)continue;p.playedMs=playedTime(p)+elapsedMs;p.games++;p.wins+=Number(t===w);p.losses+=Number(t!==w);p.pointsFor+=m.scores[t];p.pointsAgainst+=m.scores[1-t];}
  let note='';
- if(i===0){state.topCompleted++;const newStreak=Math.max(...winIds.map(id=>player(id)?.topStreak||0))+1;
+ if(m.overflow){
+   m.teams.flat().forEach(id=>{const p=player(id);p.topStreak=0;queuePlayer(p,m.originalTargets?.[id]??1);});
+   note='Court 1 overflow (provisional): results and playing time recorded; original Court 2 eligibility retained';
+ }else if(i===0){state.topCompleted++;const newStreak=Math.max(...winIds.map(id=>player(id)?.topStreak||0))+1;
    if(newStreak>=2){winIds.forEach(id=>{player(id).topStreak=0;queuePlayer(player(id),state.courts.length-1);});note=`Top champions won 2 consecutive rounds and descend directly to ${rankName(state.courts.length-1)} for new partners`;}
    else{winIds.forEach(id=>{player(id).topStreak=newStreak;});queuePair(winIds,0,10);note=`Top winners defend: ${newStreak}/2`;}
  }else{winIds.forEach(id=>{player(id).topStreak=0;});queuePair(winIds,i-1,2);note=`Winners ascend to ${rankName(i-1)}`;}
- loseIds.forEach(id=>{const p=player(id);p.topStreak=0;queuePlayer(p,Math.min(i+1,state.courts.length-1));});
+ if(!m.overflow)loseIds.forEach(id=>{const p=player(id);p.topStreak=0;queuePlayer(p,Math.min(i+1,state.courts.length-1));});
  state.history.unshift({id:m.id,court:courtName(i),teams:m.teams.map(t=>t.map(displayName)),scores:[...m.scores],winner:w,note,endedAt:now()});
  state.courts[i]=null;autoFill();save();render();
 }
-function cancel(i){const m=state.courts[i];if(!m||!confirm('Cancel this match without recording a result?'))return;for(const ids of m.teams)queuePair(ids,i,0);state.courts[i]=null;autoFill();save();render();}
+function cancel(i){const m=state.courts[i];if(!m||!confirm('Cancel this match without recording a result?'))return;if(m.overflow){for(const id of m.teams.flat()){const p=player(id);if(p)queuePlayer(p,m.originalTargets?.[id]??1);}}else for(const ids of m.teams)queuePair(ids,i,0);state.courts[i]=null;autoFill();save();render();}
 function updateScore(i,t,d){const m=state.courts[i];if(!m||m.pausedAt)return;m.scores[t]=Math.max(0,m.scores[t]+d);save();render();}
 function setManualScore(i,t,raw){
  const m=state.courts[i];if(!m)return;
@@ -100,8 +128,8 @@ function render(){const s=state.settings;$('courtCount').value=String(state.cour
  const reserved=new Set(sorted.flatMap(q=>q.ids));const singles=waitingPlayers().filter(p=>!reserved.has(p.id)).sort((a,b)=>a.queuedAt-b.queuedAt);
  $('nextQueue').innerHTML=sorted.map((q,k)=>`<tr><td>${k+1}</td><td>${q.ids.map(pid=>`<span>${esc(displayName(pid))} <button class="small secondary" data-action="edit-name" data-id="${pid}">Edit</button> <button class="small secondary" data-action="rest-player" data-id="${pid}">Rest</button></span>`).join(' / ')}</td><td>${q.target===null?'Any available court':esc(rankName(q.target))}</td><td>${q.target===0&&q.priority===10?'Top defender':'Waiting'}</td></tr>`).join('')+singles.map((p,k)=>`<tr><td>${sorted.length+k+1}</td><td>${esc(displayName(p.id))} <button class="small secondary" data-action="edit-name" data-id="${p.id}">Edit</button> <button class="small secondary" data-action="rest-player" data-id="${p.id}">Rest</button></td><td>${p.targetCourt===null?'Any available court':esc(rankName(p.targetCourt))}</td><td>${p.substitute?'Priority substitute':'Mix with incoming players'}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">No players waiting.</td></tr>';
  $('courts').innerHTML=state.courts.map((m,i)=>{if(!m)return `<article class="court ${i===0?'top-court':(String(state.courtNames[i]).trim()==='4'?'court-four':'')}"><div class="court-head"><b>${esc(rankName(i))}</b><span class="pill">Available</span></div><div class="empty">Next pairs are shown in the queue</div><button class="secondary" data-action="start" data-court="${i}">Start next match</button></article>`;
- return `<article class="court ${i===0?'top-court':(String(state.courtNames[i]).trim()==='4'?'court-four':'')}"><div class="court-head"><b>${esc(rankName(i))}</b><span class="pill live">${m.pausedAt?'Paused':'Live'}</span></div>${m.teams.map((team,t)=>`<div class="team"><div class="team-name">Team ${t?'B':'A'}<br><b>${esc(names(team))}</b>${i===0?`<br><span class="muted">Top-court streak: ${Math.max(...team.map(id=>player(id)?.topStreak||0))+1}/2</span>`:''}<br><span class="muted">Timeouts: ${m.timeouts[t]}</span></div><label class="score-entry"><span>Score</span><input class="score-input" type="number" inputmode="numeric" min="0" max="999" step="1" aria-label="Team ${t?'B':'A'} score on ${esc(rankName(i))}" data-manual-score data-court="${i}" data-team="${t}" value="${m.scores[t]}"></label><div><button class="small" data-action="score" data-court="${i}" data-team="${t}" data-delta="1" ${m.pausedAt?'disabled':''}>+1</button><br><button class="small secondary" data-action="score" data-court="${i}" data-team="${t}" data-delta="-1" ${m.pausedAt?'disabled':''}>−1</button></div></div><button class="small secondary" data-action="timeout" data-court="${i}" data-team="${t}">Record Team ${t?'B':'A'} Timeout</button>`).join('')}<p class="clock" data-clock="${i}">Match ${fmt((m.pausedAt||now())-m.startedAt-m.pausedMs)}</p><p class="hint">${winningTeam(m)!==null?'Winning score reached — confirm result.':'Match in progress'}</p><div class="actions"><button class="secondary" data-action="pause" data-court="${i}">${m.pausedAt?'Resume':'Pause'}</button><button data-action="finish" data-court="${i}">Finish</button><button class="danger" data-action="cancel" data-court="${i}">Cancel</button></div></article>`}).join('');
- const ranked=[...state.players].sort((a,b)=>b.wins-a.wins||(b.pointsFor-b.pointsAgainst)-(a.pointsFor-a.pointsAgainst)||a.name.localeCompare(b.name));$('leaderboard').innerHTML=ranked.map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.name)}${genderShort(p)?` <span class="gender-tag">${genderShort(p)}</span>`:''}</td><td>${p.wins}</td><td>${p.losses}</td><td data-played="${p.id}">${fmt(playedTime(p))}</td><td>${p.pointsFor-p.pointsAgainst>0?'+':''}${p.pointsFor-p.pointsAgainst}</td></tr>`).join('')||'<tr><td colspan="6">No results yet.</td></tr>';
+ return `<article class="court ${i===0?'top-court':(String(state.courtNames[i]).trim()==='4'?'court-four':'')}"><div class="court-head"><b>${esc(rankName(i))}</b><span class="pill live">${m.overflow?'Overflow · ':''}${m.pausedAt?'Paused':'Live'}</span></div>${m.teams.map((team,t)=>`<div class="team"><div class="team-name">Team ${t?'B':'A'}<br><b>${esc(names(team))}</b>${i===0&&!m.overflow?`<br><span class="muted">Top-court streak: ${Math.max(...team.map(id=>player(id)?.topStreak||0))+1}/2</span>`:''}<br><span class="muted">Timeouts: ${m.timeouts[t]}</span></div><label class="score-entry"><span>Score</span><input class="score-input" type="number" inputmode="numeric" min="0" max="999" step="1" aria-label="Team ${t?'B':'A'} score on ${esc(rankName(i))}" data-manual-score data-court="${i}" data-team="${t}" value="${m.scores[t]}"></label><div><button class="small" data-action="score" data-court="${i}" data-team="${t}" data-delta="1" ${m.pausedAt?'disabled':''}>+1</button><br><button class="small secondary" data-action="score" data-court="${i}" data-team="${t}" data-delta="-1" ${m.pausedAt?'disabled':''}>−1</button></div></div><button class="small secondary" data-action="timeout" data-court="${i}" data-team="${t}">Record Team ${t?'B':'A'} Timeout</button>`).join('')}<p class="clock" data-clock="${i}">Match ${fmt((m.pausedAt||now())-m.startedAt-m.pausedMs)}</p><p class="hint">${winningTeam(m)!==null?'Winning score reached — confirm result.':'Match in progress'}</p><div class="actions"><button class="secondary" data-action="pause" data-court="${i}">${m.pausedAt?'Resume':'Pause'}</button><button data-action="finish" data-court="${i}">Finish</button><button class="danger" data-action="cancel" data-court="${i}">Cancel</button></div></article>`}).join('');
+ const ranked=[...state.players].sort((a,b)=>b.wins-a.wins||(b.pointsFor-b.pointsAgainst)-(a.pointsFor-a.pointsAgainst)||a.name.localeCompare(b.name));$('leaderboard').innerHTML=ranked.map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.name)}${genderShort(p)?` <span class="gender-tag">${genderShort(p)}</span>`:''}</td><td>${p.wins}</td><td>${p.losses}</td><td data-played="${p.id}">${fmtPlayed(playedTime(p))}</td><td>${p.pointsFor-p.pointsAgainst>0?'+':''}${p.pointsFor-p.pointsAgainst}</td></tr>`).join('')||'<tr><td colspan="6">No results yet.</td></tr>';
  $('history').innerHTML=state.history.slice(0,50).map(h=>`<div class="history-item"><b>${esc(h.teams[0].join(' / '))}</b> ${h.scores[0]}–${h.scores[1]} <b>${esc(h.teams[1].join(' / '))}</b><br><time>${new Date(h.endedAt).toLocaleString()} · ${esc(h.court||'Court')} · Winner: Team ${h.winner?'B':'A'}</time>${h.note?`<p class="hint">${esc(h.note)}</p>`:''}</div>`).join('')||'<p class="muted">Completed matches will appear here.</p>';
 }
 $('addForm').addEventListener('submit',e=>{e.preventDefault();const name=$('playerName').value.trim(),gender=$('playerGender').value;if(!name)return;if(state.players.some(p=>p.name.toLowerCase()===name.toLowerCase())){alert('Name already registered.');return;}state.players.push({id:uid(),name,gender,status:'waiting',queuedAt:now(),targetCourt:null,topStreak:0,games:0,wins:0,losses:0,pointsFor:0,pointsAgainst:0,playedMs:0});$('playerName').value='';$('playerGender').value='';autoFill();save();render();});

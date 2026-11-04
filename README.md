@@ -86,3 +86,11 @@ V10 color revision: Next Match Queue uses dark marine blue (#17344C) with light 
 Use **Reset game stats only** to erase completed match history, games, wins, losses, points, playing time, active matches and court streaks, while preserving every registered player’s name, gender and ID, court settings and Rest choices. A confirmation warns that current matches are also cleared. Unlike **Reset session**, this action does not delete player registrations. Export a backup first if previous results may be needed.
 
 UI placement: Reset game stats only is directly below Reset session in the Players & waiting queue toolbar.
+
+
+## V11 — Smart Court Overflow & Fair Rotation
+- Normal court allocation is attempted first; if TOP Court remains empty and no TOP contender/defender is waiting, it can host a provisional match for four Court 2 waiting players.
+- Court 2 players are selected by fewest completed games, then lowest recorded playing time, then oldest queue timestamp.
+- Provisional TOP Court matches count for match history, scores, wins/losses, and played time but do not confer TOP defending streaks or promotions. All four players return to their original Court 2 eligibility after completion or cancellation.
+- Resting and already-playing players cannot be borrowed. The TOP Court is never interrupted, and pending TOP contender/defender reservations prevent overflow.
+- Cumulative leaderboard playing time now displays HH:MM:SS.
