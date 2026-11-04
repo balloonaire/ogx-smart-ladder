@@ -131,7 +131,7 @@ function takeDynamicOverflow(i){
  const eligible=waitingPlayers().filter(p=>!fixedMate(p)&&!reservedTop.has(p.id)&&Number.isInteger(p.targetCourt)&&p.targetCourt!==i&&p.targetCourt>=0&&p.targetCourt<state.courts.length&&Boolean(state.courts[p.targetCourt]));
  // Borrow from ONE blocked destination queue, never combine unrelated ladder levels.
  const groups=new Map();
- for(const p of eligiblePlayers){if(!groups.has(p.targetCourt))groups.set(p.targetCourt,[]);groups.get(p.targetCourt).push(p);}
+ for(const p of eligible){if(!groups.has(p.targetCourt))groups.set(p.targetCourt,[]);groups.get(p.targetCourt).push(p);}
  const candidates=[...groups.entries()].filter(([,players])=>players.length>=4);
  if(!candidates.length)return null;
  // Adjacent ranked courts first; then prioritize the longest-waiting eligible group.
