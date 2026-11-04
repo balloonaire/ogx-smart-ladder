@@ -23,3 +23,11 @@ LIVE PLAYER REPLACEMENT: Each live team has Replace buttons beside its two playe
 
 
 ATELIER PRO VISUAL REDESIGN: Original CSS-rendered pickleball-court hero graphic (no image dependencies), editorial typography, platinum/forest-lime accents, live-court status bar, unified soft backgrounds on non-TOP courts, sky-blue TOP Court. Game rules and live player replacement unchanged. Works offline with local browser storage.
+
+## Regular Player Registry
+The Players page includes **Save regular players**, **Load regular players**, **Export registry**, **Import registry**, and **Delete saved registry**.
+- Save merges all current registered players into a separate browser-local registry, identified by case-insensitive name. Saving does not erase previously saved regulars.
+- Load adds only missing names to the current session as **Pending**, with zero statistics. Existing players and live games are unchanged. Mark SHOW when they arrive.
+- Reset session clears the current session but **preserves the saved registry**. Reset game stats only preserves both.
+- Export produces `ogx-regular-players.json`; import merges a previously exported registry file. Session backup remains separate.
+- Browser storage is device/browser-specific, not multi-device synchronization. Export both backups before clearing browser data or moving devices.

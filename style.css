@@ -174,3 +174,11 @@ button:not(.danger):not(.secondary):not(.view-tab),.button:not(.secondary){backg
 .live-status-bar{display:flex;align-items:center;gap:9px;color:#B9D1DE;font-size:.76rem;letter-spacing:.05em;margin-bottom:13px}
 .live-pulse{width:9px;height:9px;border-radius:50%;background:#C4F08D;box-shadow:0 0 0 4px #C4F08D20}
 @media(max-width:650px){.graphic-banner{margin:12px 12px 5px;grid-template-columns:1fr;min-height:unset}.graphic-banner-copy{padding:22px}.graphic-court{display:none}.graphic-banner-copy strong{font-size:2rem}}
+
+.registry-panel{border:1px solid #54707d;border-radius:16px;padding:18px;margin:18px 0;background:linear-gradient(115deg,#1b3549,#203e4f)}
+.registry-heading{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.registry-heading h3{margin:0;color:#eef6f7;font-size:1.14rem}
+.registry-tag{color:#C4F08D;font-size:.68rem;font-weight:800;letter-spacing:.11em}
+.registry-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.registry-actions button,.registry-actions .registry-import{font-size:.83rem;min-height:38px;display:inline-flex;align-items:center;justify-content:center}
+@media(max-width:560px){.registry-heading{align-items:flex-start;flex-direction:column}.registry-actions>*{flex:1 1 44%}}

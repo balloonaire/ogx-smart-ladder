@@ -11,6 +11,37 @@ state.settings={...fresh().settings,...state.settings};
 state.lastPairs=Array.isArray(state.lastPairs)?state.lastPairs:[];
 for(const p of state.players){p.attendance=['show','no-show','pending'].includes(p.attendance)?p.attendance:'show';p.gender=typeof p.gender==='string'?p.gender:'';p.topStreak=p.topStreak||0;p.targetCourt=Number.isInteger(p.targetCourt)?p.targetCourt:null;p.substitute=Boolean(p.substitute);p.playedMs=Number.isFinite(Number(p.playedMs))?Math.max(0,Number(p.playedMs)):0;}
 const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
+// Separate persistent registry; independent from match/session resets.
+const REGISTRY_KEY='ogx-smart-ladder-regular-players-v1';
+function readRegistry(){
+ try{
+  const data=JSON.parse(localStorage.getItem(REGISTRY_KEY)||'[]');
+  if(!Array.isArray(data))return [];
+  return data.filter(x=>x&&typeof x.name==='string'&&x.name.trim()&&x.name.length<=40)
+   .map(x=>({name:x.name.trim(),gender:typeof x.gender==='string'?x.gender:''}))
+   .filter((x,i,a)=>a.findIndex(y=>y.name.toLocaleLowerCase()===x.name.toLocaleLowerCase())===i);
+ }catch{return [];}
+}
+function writeRegistry(list){localStorage.setItem(REGISTRY_KEY,JSON.stringify(list));renderRegistry();}
+function downloadJSON(name,data){
+ const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+ a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+function renderRegistry(){
+ const el=$('registrySummary');
+ if(el)el.textContent=`${readRegistry().length} regular player${readRegistry().length===1?'':'s'} saved on this browser`;
+}
+function addRegistryToSession(){
+ const registry=readRegistry(),known=new Set(state.players.map(p=>p.name.trim().toLocaleLowerCase()));
+ let added=0;
+ for(const item of registry){
+  if(known.has(item.name.toLocaleLowerCase()))continue;
+  state.players.push({id:uid(),name:item.name,gender:item.gender,attendance:'pending',status:'waiting',queuedAt:now(),targetCourt:null,topStreak:0,games:0,wins:0,losses:0,pointsFor:0,pointsAgainst:0,playedMs:0});
+  known.add(item.name.toLocaleLowerCase());added++;
+ }
+ save();render();alert(`${added} regular player${added===1?'':'s'} loaded as Pending. ${registry.length-added} already registered.`);
+}
+
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=ms=>{let n=Math.max(0,Math.floor(ms/1000));return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`};
 const fmtPlayed=ms=>{let n=Math.max(0,Math.floor(ms/1000));return `${String(Math.floor(n/3600)).padStart(2,'0')}:${String(Math.floor(n%3600/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`};
@@ -180,9 +211,36 @@ $('resetStatsBtn').addEventListener('click',()=>{
  // Deliberately do not auto-fill: organizer can start fresh games after resetting.
  save();render();
 });
-$('resetBtn').addEventListener('click',()=>{if(confirm('Delete all local session data?')){state=fresh();save();render();}});
+$('resetBtn').addEventListener('click',()=>{if(confirm('Reset this session and delete all current session players, matches and statistics?\\n\\nYour separately saved Regular Player Registry will be kept.')){state=fresh();save();render();renderRegistry();}});
 $('exportBtn').addEventListener('click',()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:'application/json'}));a.href=url;a.download='ogx-ladder-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
 $('importFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{const d=JSON.parse(await file.text());if(!Array.isArray(d.players)||!Array.isArray(d.courts)||!Array.isArray(d.history)||!d.settings)throw Error('Invalid backup');if(!confirm('Replace the current browser session?'))return;state={...fresh(),...d};state.courtNames=Array.isArray(d.courtNames)&&d.courtNames.length===d.courts.length?d.courtNames:d.courts.map((_,i)=>String(i+1));state.pendingPairs=Array.isArray(d.pendingPairs)?d.pendingPairs:[];state.players.forEach(p=>{p.attendance=['show','no-show','pending'].includes(p.attendance)?p.attendance:'show';p.gender=typeof p.gender==='string'?p.gender:'';p.topStreak=p.topStreak||0;p.targetCourt=Number.isInteger(p.targetCourt)?p.targetCourt:null;p.substitute=Boolean(p.substitute);p.playedMs=Number.isFinite(Number(p.playedMs))?Math.max(0,Number(p.playedMs)):0;});save();render();}catch(err){alert('Import failed: '+err.message);}finally{e.target.value='';}});
+$('saveRegistryBtn').addEventListener('click',()=>{
+ const current=readRegistry(),byName=new Map(current.map(x=>[x.name.toLocaleLowerCase(),x]));
+ for(const p of state.players)byName.set(p.name.trim().toLocaleLowerCase(),{name:p.name.trim(),gender:p.gender||''});
+ writeRegistry([...byName.values()]);alert(`${byName.size} regular players saved. Export the registry for a portable backup.`);
+});
+$('loadRegistryBtn').addEventListener('click',()=>{if(!readRegistry().length){alert('Your regular player registry is empty. Save players or import a registry first.');return;}addRegistryToSession();});
+$('exportRegistryBtn').addEventListener('click',()=>downloadJSON('ogx-regular-players.json',{format:'ogx-regular-players-v1',players:readRegistry()}));
+$('importRegistryFile').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{
+  const data=JSON.parse(await file.text());
+  if(data.format!=='ogx-regular-players-v1'||!Array.isArray(data.players)||data.players.length>1000)throw Error('Invalid registry file');
+  const clean=data.players.map(p=>({name:String(p.name||'').trim(),gender:String(p.gender||'')}))
+   .filter(p=>p.name.length>0&&p.name.length<=40&&p.gender.length<=40);
+  if(clean.length!==data.players.length)throw Error('Invalid player name or gender');
+  const merged=new Map(readRegistry().map(p=>[p.name.toLocaleLowerCase(),p]));
+  for(const item of clean)merged.set(item.name.toLocaleLowerCase(),item);
+  if(!confirm(`Import ${clean.length} regular players? Existing registry names will be merged, not deleted.`))return;
+  writeRegistry([...merged.values()]);alert('Registry imported. Select Load regular players to add them to this session.');
+ }catch(err){alert('Registry import failed: '+err.message);}
+ finally{e.target.value='';}
+});
+$('clearRegistryBtn').addEventListener('click',()=>{
+ if(!confirm('Delete the saved Regular Player Registry from this browser?\\n\\nCurrent session players will not be deleted. Export a backup first if needed.'))return;
+ localStorage.removeItem(REGISTRY_KEY);renderRegistry();
+});
+renderRegistry();
 setInterval(()=>{for(const p of state.players){const el=document.querySelector(`[data-wait="${p.id}"]`);if(el&&p.status==='waiting'&&p.attendance==='show')el.textContent=fmt(now()-p.queuedAt);}state.courts.forEach((m,i)=>{const el=document.querySelector(`[data-clock="${i}"]`);if(m&&el)el.textContent='Match '+fmt((m.pausedAt||now())-m.startedAt-m.pausedMs);});},1000);
 // Do not auto-fill imported sessions until the user has inspected them.
 save();render();
