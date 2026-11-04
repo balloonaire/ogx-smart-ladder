@@ -9,6 +9,8 @@
  }
  buttons.forEach(b=>b.addEventListener('click',()=>show(b.dataset.view)));
  let initial='courts';try{initial=sessionStorage.getItem('ogx-v12-view')||initial}catch(e){}
+ if(initial==='queue')initial='courts';
+ if(initial==='leaderboard')initial='players';
  show(buttons.some(b=>b.dataset.view===initial)?initial:'courts');
  function stats(){
    // Derive counters from rendered rows and match cards, without modifying app state.

@@ -12,3 +12,7 @@ Static offline-capable browser app. Open index.html or publish all five files to
 
 ## Important
 V12 changes presentation only; it does not reset or migrate local storage. Session data is stored in the same browser as V11. Export a backup before updating.
+
+V12 layout update: The Next Match Queue is directly below the Courts section in the same Courts view. The separate Queue tab is removed; all queue controls and game logic remain unchanged.
+
+V12 layout update: Courts and Next Match Queue share the Courts tab. Players, Leaderboard, and Match History share the Players tab. The separate Leaderboard tab is removed.
