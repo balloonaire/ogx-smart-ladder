@@ -17,3 +17,18 @@
 .court.top-court .pill.live{background:#167b62;color:#fff}
 .court.top-court .score-input{background:#fff;color:#0d2a40;border-color:#64afd5}
 .gender-tag{display:inline-flex;align-items:center;justify-content:center;min-width:22px;padding:2px 5px;border-radius:5px;background:#2d5878;color:#d9f3ff;font-weight:750;font-size:.75rem}
+
+/* V10 palette refresh: Court 4 and next-match queue */
+.court.court-four{background:#344659;border:2px solid #63788d;color:#f1f6fc;box-shadow:0 2px 12px rgba(8,17,30,.22)}
+.court.court-four .team{background:#42576c;border:1px solid #667e94;color:#f4f8fd}
+.court.court-four .pill{background:#526d87;color:#fff}
+.court.court-four .pill.live{background:#26665e;color:#eafff6}
+.court.court-four .clock,.court.court-four .muted,.court.court-four .empty{color:#d1deea}
+.court.court-four .score-input{background:#1c2e40;color:#fff;border-color:#90b2cb}
+.panel.next-match-queue{background:#ffe0b8;border:2px solid #e9a66c;color:#422a1d}
+.panel.next-match-queue h2{color:#673617}
+.panel.next-match-queue p,.panel.next-match-queue .hint,.panel.next-match-queue .muted{color:#70472f}
+.panel.next-match-queue th{color:#70472f}
+.panel.next-match-queue td,.panel.next-match-queue th{border-bottom-color:#dbb48e}
+.panel.next-match-queue td{color:#3e2b20}
+.panel.next-match-queue .secondary{background:#895b40;color:#fff;border-color:#895b40}

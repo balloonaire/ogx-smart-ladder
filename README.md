@@ -77,3 +77,5 @@ Every individual waiting player has a Rest button next to their name, including 
 - Leaderboard gender tags: M for Male and F for Female; other or unspecified genders show no tag.
 - Playing Time is the accumulated duration of completed matches per player, excluding match pauses. In-progress matches do not count until completed; cancelled matches do not count. Historical matches from before V10 have no recorded durations and cannot be reconstructed.
 - Highest-ranked court (court index 0) gets a sky-blue match sheet, independent of its physical court number.
+
+V10 palette refresh: physical Court 4 uses dark greyish-blue (unless ranked TOP); Next Match Queue uses light orange.
