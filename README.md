@@ -31,3 +31,9 @@ The Players page includes **Save regular players**, **Load regular players**, **
 - Reset session clears the current session but **preserves the saved registry**. Reset game stats only preserves both.
 - Export produces `ogx-regular-players.json`; import merges a previously exported registry file. Session backup remains separate.
 - Browser storage is device/browser-specific, not multi-device synchronization. Export both backups before clearing browser data or moving devices.
+
+## V13: Bulk Attendance & Search
+- New **Attendance** tab: tick any number of registered players, including Select all visible eligible, choose SHOW / NO SHOW / Pending, and apply in one action. Existing on-court players are excluded to protect active matches.
+- Search player names in the **Players** tab, and separately search waiting-player names in the **Next match queue** on the Courts tab. Both searches filter displayed rows only, never affect scheduling.
+- Attendance tab also has its own search and single-player attendance dropdowns. Select all only applies to currently visible eligible rows; selections survive search changes until applied or cleared.
+- Data continues to save locally in the browser. The regular-player registry and export/import remain available.

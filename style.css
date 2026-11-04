@@ -182,3 +182,14 @@ button:not(.danger):not(.secondary):not(.view-tab),.button:not(.secondary){backg
 .registry-actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}
 .registry-actions button,.registry-actions .registry-import{font-size:.83rem;min-height:38px;display:inline-flex;align-items:center;justify-content:center}
 @media(max-width:560px){.registry-heading{align-items:flex-start;flex-direction:column}.registry-actions>*{flex:1 1 44%}}
+
+/* V13: bulk attendance and independent player/queue search */
+.search-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0}
+.search-row label{font-size:.88rem;font-weight:700}
+.search-row input{width:min(100%,330px);padding:10px 12px;border-radius:9px}
+.attendance-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}
+.attendance-tools .check-all{display:flex;gap:8px;align-items:center}
+.attendance-tools select{min-width:125px}
+.attendance-tools input[type=checkbox],#attendanceBody input[type=checkbox]{width:18px;height:18px;accent-color:#bfe987}
+#attendanceBody tr[hidden],#playersBody tr[hidden],#nextQueue tr[hidden]{display:none!important}
+@media(max-width:600px){.attendance-tools{align-items:stretch}.attendance-tools button{flex:1 1 40%}}
