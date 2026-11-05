@@ -1,84 +1,78 @@
-# OGX Smart Ladder — free browser prototype
+# OGX Smart Ladder V12 — Prestige Edition
 
-A no-build HTML/CSS/JavaScript pickleball ladder manager. No server, dependencies or API keys needed.
+Premium modern interface redesign based on V12 Dynamic Court Allocation.
 
-## Start
-Open `index.html` in a modern browser. Add 4+ players or choose **Load demo players**. The app automatically fills free courts when **Auto-fill empty courts** is enabled. Tap +1 / −1 to score, **Pause** to stop the match clock and disable scoring, and **Finish** to confirm the result and rotate players.
+## Visual changes
+- Midnight navy and champagne gold visual system
+- TOP Court sky blue; all non-TOP courts use identical soft blue-grey
+- Minimal geometric court emblems replace fruit icons
+- Courts + queue together, players + leaderboard + history together
+- Mobile-responsive styling
 
-## Publish on GitHub Pages
-1. Sign in to https://github.com and create a **public** repository named `ogx-smart-ladder` (do not add a README when creating it).
-2. Choose **Add file → Upload files** and upload `index.html`, `style.css`, and `app.js` (optionally this README).
-3. Commit changes.
-4. Open repository **Settings → Pages**.
-5. Under **Build and deployment**, choose **Deploy from a branch**. Choose branch `main` and folder `/(root)`, then **Save**.
-6. After deployment, visit `https://YOUR-USERNAME.github.io/ogx-smart-ladder/`.
+## Gameplay
+Existing V12 Dynamic Court Allocation, Smart Overflow, Fair Rotation, scoring, Rest/Resume, reset buttons and browser-local storage are preserved.
 
-GitHub Pages hosts the front-end only. This prototype stores data in the current browser's localStorage, **not** on GitHub or in a shared database. Two devices will have separate data. Export backups frequently. Do not use this version for official tournament results or DUPR submissions.
-
-## Fair rotation
-The next four waiting players are chosen by fewest games played, then longest waiting. Team splits try to avoid recently repeated partnerships. Each court is automatically refilled after its match is completed or cancelled if enough players are waiting. This is a *social rotating doubles* scheduler, not a strict skill-based challenge ladder.
-
-## Limitations
-- Only one browser/device owns the live session. No multi-device synchronization or login.
-- Timeout buttons record timeout counts, but do not automatically run a countdown or enforce official timeout limits.
-- Score rules are simplified: no side-out scoring, server tracking, end changes, or full competition rules enforcement.
-- No DUPR API connection.
-- No protection against two tabs editing the same session concurrently.
-- The app uses localStorage, so browser storage clearing or private browsing can delete the session.
-- GitHub Pages availability and acceptable-use restrictions apply; for commercial events, use suitable hosting.
-
-## Next upgrade
-Add a hosted database (e.g., Supabase), authentication, server-validated match results, live synchronized scoreboards, timed timeout rules, and robust queue locking.
-
-## Version 2: Court ladder and next queue
-- Physical court labels can be manually entered in ranked order (highest court first).
-- Winning doubles pairs move one court up; losing pairs move one court down. At boundaries they stay assigned to the boundary court.
-- The highest-court winning pair may defend for at most two consecutive matches. After two, they enter the queue and must sit out at least the next top-court match.
-- The Next Match Queue shows waiting pairs, target courts, and top-court rotation status.
-- This is a local-browser prototype, not a synchronized multi-device server.
-- Back up data before replacing files. Existing v1 local storage is imported on first use of v2.
-
-## Manual score entry (V3)
-On each live court, type the exact score for Team A or Team B in its **Score** field, then press Enter or tap outside the field. Scores must be whole numbers from 0 to 999. The +1/−1 buttons remain available. Changes are saved to the local session and are used when **Finish** confirms a match.
+## Installation
+Upload index.html, app.js, style.css, v12-ui.js, and README.md to the root of the GitHub Pages repository. Export a session backup before replacing an existing deployment.
 
 
-## V4 additions
-- **Three courts** is now a supported session size (1, 2, 3, 4, 6 or 8). Court order remains highest to lowest and physical labels can be customized.
-- Player registration includes an optional **gender** field (Female, Male, Non-binary, Prefer not to say).
-- Gender appears in the player table and alongside player names in court matchups, the next-match queue and completed match history when disclosed.
-- Existing saved players and imported backups without gender remain supported and display **Not specified** in the player table.
-- Gender does not affect scheduling or team formation.
+Attendance: Players have Pending, SHOW, and NO SHOW in the Players table. New registrations start Pending; existing saved registrations default to SHOW for compatibility. Only SHOW players are eligible for court allocation. Attendance changes persist in browser storage and exported backups. Playing players cannot change attendance until their match ends. Rest remains independent of attendance.
 
-## V5: Editable court hierarchy
 
-Use the up/down arrows in Session settings to rearrange the physical court numbers. The first entry is always TOP, regardless of its numeric value (for example 8, 3, 12). The ranking order is saved in this browser. Court numbers must be unique nonnegative integers; finish or cancel any live matches before reordering. The existing promotion, relegation, top-court two-round limit, three-court option, gender labels and manual scoring remain available.
+LIVE PLAYER REPLACEMENT: Each live team has Replace buttons beside its two players. Select a SHOW player from the waiting list and confirm. Scores and timer remain unchanged, departing player returns to waiting with original court eligibility, incoming player becomes playing, and replacement is saved in match history. Playing time is split at substitution; only finishing players receive game outcome statistics. Works on overflow matches. This is still browser-local and does not sync across devices.
 
-## V6: Two-win TOP champions descend to the last court
-- A doubles team that wins twice consecutively on the TOP court is sent directly to the lowest-ranked court, regardless of physical court number.
-- Both champions become individually eligible for new partners at the bottom court; their TOP streak resets.
-- TOP winners after their first win remain together for their second match.
-- Losers descend individually and mix with other incoming or waiting players on lower courts.
-- Court allocations are transactional: insufficient players leave queue assignments unchanged.
 
-## V7: Rest and lower-court substitutions
+ATELIER PRO VISUAL REDESIGN: Original CSS-rendered pickleball-court hero graphic (no image dependencies), editorial typography, platinum/forest-lime accents, live-court status bar, unified soft backgrounds on non-TOP courts, sky-blue TOP Court. Game rules and live player replacement unchanged. Works offline with local browser storage.
 
-- Use **Rest** beside a waiting player to remove them from match selection. **Resume** restores their waiting eligibility. Resting does not remove their registration, scores, or statistics.
-- Use **Sub lower** to put an eligible waiting player at the front of the lowest-court candidate pool. The substitution applies only to the next match, never a match already in progress.
-- Lower-court partners are remixed. A player assigned to a non-TOP lower court may fill an otherwise available lowest-court slot. TOP-court reserved pairs are not taken as substitutes.
-- Queue state is saved in browser local storage and included in JSON exports.
+## Regular Player Registry
+The Players page includes **Save regular players**, **Load regular players**, **Export registry**, **Import registry**, and **Delete saved registry**.
+- Save merges all current registered players into a separate browser-local registry, identified by case-insensitive name. Saving does not erase previously saved regulars.
+- Load adds only missing names to the current session as **Pending**, with zero statistics. Existing players and live games are unchanged. Mark SHOW when they arrive.
+- Reset session clears the current session but **preserves the saved registry**. Reset game stats only preserves both.
+- Export produces `ogx-regular-players.json`; import merges a previously exported registry file. Session backup remains separate.
+- Browser storage is device/browser-specific, not multi-device synchronization. Export both backups before clearing browser data or moving devices.
 
-## V8 emergency queue name editing
-Waiting players can be renamed from the player list or next-match queue. Duplicate or blank names are rejected. Player IDs, scores, statistics, court assignments, and queue positions are preserved. Completed match history retains the names recorded when each match finished. This is a name correction, not a player substitution.
+## V13: Bulk Attendance & Search
+- New **Attendance** tab: tick any number of registered players, including Select all visible eligible, choose SHOW / NO SHOW / Pending, and apply in one action. Existing on-court players are excluded to protect active matches.
+- Search player names in the **Players** tab, and separately search waiting-player names in the **Next match queue** on the Courts tab. Both searches filter displayed rows only, never affect scheduling.
+- Attendance tab also has its own search and single-player attendance dropdowns. Select all only applies to currently visible eligible rows; selections survive search changes until applied or cleared.
+- Data continues to save locally in the browser. The regular-player registry and export/import remain available.
 
-## V9: Rest directly from the next-match queue
-Every individual waiting player has a Rest button next to their name, including players in reserved pairs. Resting removes their pending pair reservation and excludes them from matchmaking. Resume from the Players table restores waiting eligibility.
+## V14: One-go bulk attendance on Players and Waiting Queue
+- Tick any number of names directly in the Players list or Next Match Queue. Paired waiting players each have their own checkbox.
+- Selections are shared between Players, Waiting Queue, and Attendance tabs. Choose SHOW, NO SHOW, or Pending and Apply to selected once.
+- Select all visible respects the active search filter; names hidden by search are not selected automatically.
+- Live-match participants cannot be selected or have attendance changed.
+- Changing a waiting player to NO SHOW or Pending removes that player from queued pairs. Existing scores and matches remain unchanged.
 
-## V10: Shared sessions, court rules and scoring
+## V15 — Fixed partners and court visibility
+- Court & Live Scores shows player names without gender labels; gender remains available in the Players page.
+- LIVE badge is bright red on every court.
+- In Players, tick Fixed and choose the partner in the adjacent dropdown. Pairing is reciprocal and persists in session storage/backups.
+- Uncheck Fixed to unlink both players. Only players not currently in a match can be paired.
+- Normal match selection keeps mutually fixed partners on the same team, and skips a fixed player if their partner is not eligible. Dynamic overflow does not borrow fixed partners.
+- Existing TOP-court defender/promoted pair reservations retain ladder precedence; these may supersede fixed pairing until the reserved match completes.
 
-- **Multi-device:** Settings contains a Firebase Realtime Database URL, shared session code, optional Firebase ID token, and Host / Editor or Live Viewer role. Configure a Firebase Realtime Database and appropriate authentication/security rules first. A session code is not a secret and does not authorize access. Host sends edits to the cloud; viewers poll every 3 seconds. Use only **one host** at a time; simultaneous hosts are not conflict-safe. Database setup is not included in this ZIP.
-- **Top court toggle:** Switch TOP-court defending champions on or off when no matches are in progress. When off, court 1 winners return to its waiting pool; other court winners ascend and losers descend. The switch clears existing pending pair reservations.
-- **Scoring:** Rally scoring allows either team to gain points. Traditional side-out starts at 0-0-2, only lets the serving team gain points using +1, and provides a next-server/side-out button. Manual score fields remain available for score correction. Select scoring method before a match for consistent records.
-- **Next match queue:** No selection checkboxes; individual Edit and Rest buttons remain.
-- **Team contrast:** Team A is blue/cyan and Team B is maroon/orange with distinct borders and score accents.
 
-**Limitations:** This prototype does not enforce Firebase rules or provide user authentication. Firebase must be configured externally. The viewer role is a UI restriction, not a secure authorization boundary. Do not use open database rules with personal information. Cloud connectivity has not been end-to-end tested against a real Firebase instance.
+## V16 changes (built from user-provided V15)
+- Settings: TOP court champion-defense ON/OFF. Switching requires no live matches; disabled mode still has ranked courts, but no two-win champion-drop rule.
+- Settings: rally scoring or traditional side-out 0-0-2. In side-out mode Team A starts serving as server 2, only the serving team can score with +1, and the scorekeeper presses Side out / Next server to advance server. Manual score correction remains available. This is not an automated official serving-position referee.
+- Next Match Queue: removed only attendance tickboxes and its bulk-selection toolbar. Players and Attendance tabs retain bulk attendance selection. Rest and Edit buttons remain.
+- Live courts: Team A has vivid blue framing and Team B orange framing, with contrasting text and score fields.
+- Settings: Host / Editor + 3 or more Live Viewers via Firebase Realtime Database REST polling (~3 seconds). The cloud connection is optional; local use still works.
+
+### Firebase setup (required for cross-device sharing)
+1. Create a Firebase project and Realtime Database, and enable Anonymous sign-in under Authentication.
+2. For a **temporary private test project only**, use database rules that allow signed-in clients to read/write the `ogxSessions` tree. Example:
+
+```json
+{ "rules": { "ogxSessions": { "$session": { ".read": "auth != null", ".write": "auth != null" } } } }
+```
+
+**Security limitation:** These demonstration rules do NOT enforce host-only editing on the server and are NOT safe for sensitive data or public production use. Any authenticated anonymous user who discovers a session code could read or overwrite that session. The viewer role is enforced by the app interface only. For production, add Firebase custom-claims/owner-based rules, verified membership, and stronger access control.
+3. Copy the Firebase Web API key, HTTPS Realtime Database URL, and a long random session code into Settings on all devices. Use Generate session code on the host and copy it to viewers.
+4. Connect the host first, then viewers. Only host changes are pushed by this client. The host can optionally load an existing remote ladder when reconnecting.
+5. Avoid concurrent hosts. Do not share the session code publicly. Cloud registry syncing is NOT included; the regular-player registry stays browser-local. Export it as backup.
+6. Network access is required for shared sessions; disconnected viewers show their last synced copy.
+
+No Firebase credentials are included in the ZIP. The shared mode cannot work until Firebase is configured.
