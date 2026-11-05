@@ -112,3 +112,6 @@ Each team may record up to **3 timeouts per match**. One gold star appears besid
 - If auto-fill is enabled, singles courts are filled before doubles courts. Existing LADDER / SOCIAL PLAY selection remains active.
 - Turn singles off only after any active singles matches have finished or been cancelled.
 - This is a local code update; live Firebase synchronization still requires testing.
+
+## V23 — OGX Nightshift color system
+The complete interface is refreshed around **Onyx Black `#010101`**, **Electric Indigo `#6331FB`**, and **Tropical Mint `#88F9C0`**. Onyx is the main canvas, Indigo defines navigation and championship emphasis, and Mint highlights actions, live status, and selections. Teams retain distinct high-contrast indigo-tinted and mint-tinted panels. This update is visual only: V22 mixed singles/doubles court assignment and prior gameplay features are preserved.
