@@ -84,3 +84,14 @@ Upload all SIX files: `index.html`, `app.js`, `style.css`, `v12-ui.js`, `cloud-s
 ## V18 — TOP-court appearance and timeout stars
 - Turning TOP-court champion defense OFF removes TOP labels (including the court-ranking editor) and uses the same standard-court styling for Court 1 as the other courts. Turning it ON restores the sky-blue TOP appearance and labels. Existing V17 rule restricting mode changes during live matches remains.
 - Each team displays one gold star beside its timeout button after one timeout, two after two. The button disables at two; the count persists with the active match in session backups and browser storage.
+
+
+## V19 — LADDER / SOCIAL PLAY modes
+- **LADDER ON**: Original TOP sky-blue court and TOP labels; ranked courts, promotion/relegation, defender streaks, dynamic overflow.
+- **LADDER OFF = SOCIAL PLAY**: All courts have the standard background and no TOP labels or rank hierarchy. All eligible SHOW/waiting players may be allocated to any available court; no promotion, relegation, defender pair reservation or dynamic overflow. Selection is randomized among similarly experienced players; reciprocal fixed partners stay on the same team.
+- On finishing a SOCIAL PLAY match, all four players return to the general waiting pool, with scores, time played and win/loss statistics recorded. Cancellation also returns all four to the general pool.
+- Switching modes requires all courts to be idle and clears old waiting court assignments; other data is preserved.
+- Two-star timeout limit and all other V18 features remain.
+
+## V20 — Team timeout stars
+Each team may record up to **3 timeouts per match**. One gold star appears beside the Record Team Timeout button for each recorded timeout (★, ★★, ★★★). The button disables at three; the count is saved with the match.
