@@ -52,3 +52,30 @@ The Players page includes **Save regular players**, **Load regular players**, **
 - Uncheck Fixed to unlink both players. Only players not currently in a match can be paired.
 - Normal match selection keeps mutually fixed partners on the same team, and skips a fixed player if their partner is not eligible. Dynamic overflow does not borrow fixed partners.
 - Existing TOP-court defender/promoted pair reservations retain ladder precedence; these may supersede fixed pairing until the reserved match completes.
+
+
+## V17 — ATELIER PRO updates (from supplied files)
+- Original five uploaded files retained as the foundation; `cloud-sync.js` added.
+- Settings: TOP champion defense on/off. Turn off only after finishing/cancelling live matches. When off, court 1 still ranks highest, but winners there do not defend or get two-win penalties.
+- Settings: Rally or traditional side-out (0-0-2). Side-out mode starts at 0-0-2 and only the serving team can gain a point using +1; manually use **Switch server / side-out** to track serve changes. Manual score corrections remain available. This is NOT a full automatic pickleball fault/serve engine.
+- Next match queue: checkboxes and its bulk attendance toolbar removed ONLY from this queue. Players and Attendance tabs retain bulk tick functionality.
+- Live court cards: softly contrasting BLUE Team A and PEACH Team B borders, backgrounds and name colors.
+- Cloud: optional Firebase REST synchronization, one host and any number of read-only viewers, ~3 second polling.
+
+### Configure shared devices
+1. Create a Firebase project, enable **Authentication → Sign-in method → Anonymous**, and create **Realtime Database**.
+2. Copy the Firebase Realtime Database URL and the Firebase Web API key from the Firebase project settings into the OGX Settings tab.
+3. Configure database rules. For **temporary private testing only**, this sample allows ANY authenticated anonymous user to read/write all sessions (not suitable for public use):
+
+```json
+{ "rules": { "ogxSessions": { "$session": { ".read": "auth != null", ".write": "auth != null" } } } }
+```
+
+4. On the laptop choose Host / editor, generate a long random session code, and connect.
+5. On the tablet and phone use the SAME database URL, API key and session code, choose Live viewer, then connect.
+6. Changes from the host appear on viewers after approximately 3 seconds. The regular-player registry is still browser-local; it is not synced by this feature.
+
+**SECURITY LIMITATION:** The above rules are a demo only. The host/viewer distinction is implemented in the interface, NOT enforced by Firebase. Anyone with database access and the code may overwrite session data. Do not deploy these rules for public or sensitive use. Use secure role-based Firebase rules and identity management before production. Internet connectivity is required. If the host is offline, local changes may not be uploaded until a later change; export backups regularly.
+
+### Installation
+Upload all SIX files: `index.html`, `app.js`, `style.css`, `v12-ui.js`, `cloud-sync.js`, `README.md`.

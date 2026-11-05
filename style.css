@@ -207,3 +207,11 @@ button:not(.danger):not(.secondary):not(.view-tab),.button:not(.secondary){backg
 .fixed-pair-label{display:inline-flex;align-items:center;gap:4px;font-size:.8rem;margin-right:6px}
 .fixed-pair-label input{accent-color:#c4f08d;width:17px;height:17px}
 .fixed-partner-select{font-size:.8rem;max-width:150px;padding:6px}
+
+/* V17: gentle but clearly contrasting TEAM frames, all courts */
+.court .team.team-a,.court.standard-court .team.team-a,.court.top-court .team.team-a{background:#E8F2FA;border:3px solid #77A9CC;border-left:8px solid #5F97C0;color:#183D58}
+.court .team.team-b,.court.standard-court .team.team-b,.court.top-court .team.team-b{background:#FFF0E7;border:3px solid #DEA883;border-left:8px solid #D58D60;color:#60391F}
+.court .team.team-a .team-name b{color:#184C71}.court .team.team-b .team-name b{color:#8A4A25}
+.court .team.team-a .score-input{border-color:#77A9CC}.court .team.team-b .score-input{border-color:#DEA883}
+.cloud-settings{margin-top:24px;padding:18px;border:1px solid #516679;border-radius:12px;background:#102439}.cloud-settings h3{color:#C4F08D;margin:0 0 8px}.cloud-settings .settings{margin:12px 0}.cloud-settings .settings label{min-width:220px}.serve-controls{padding:9px 12px;border-radius:9px;background:#D9E7EB;color:#18384E;font-weight:650;margin:8px 0}.serve-controls button{margin-left:8px}
+body.cloud-viewer main button:not(.view-tab),body.cloud-viewer main input:not([id^="cloud"]),body.cloud-viewer main select:not([id^="cloud"]){pointer-events:none;opacity:.7}body.cloud-viewer .cloud-settings button,body.cloud-viewer .cloud-settings input,body.cloud-viewer .cloud-settings select{pointer-events:auto;opacity:1}
