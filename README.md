@@ -79,3 +79,8 @@ The Players page includes **Save regular players**, **Load regular players**, **
 
 ### Installation
 Upload all SIX files: `index.html`, `app.js`, `style.css`, `v12-ui.js`, `cloud-sync.js`, `README.md`.
+
+
+## V18 — TOP-court appearance and timeout stars
+- Turning TOP-court champion defense OFF removes TOP labels (including the court-ranking editor) and uses the same standard-court styling for Court 1 as the other courts. Turning it ON restores the sky-blue TOP appearance and labels. Existing V17 rule restricting mode changes during live matches remains.
+- Each team displays one gold star beside its timeout button after one timeout, two after two. The button disables at two; the count persists with the active match in session backups and browser storage.

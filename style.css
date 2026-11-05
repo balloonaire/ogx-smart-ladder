@@ -215,3 +215,7 @@ button:not(.danger):not(.secondary):not(.view-tab),.button:not(.secondary){backg
 .court .team.team-a .score-input{border-color:#77A9CC}.court .team.team-b .score-input{border-color:#DEA883}
 .cloud-settings{margin-top:24px;padding:18px;border:1px solid #516679;border-radius:12px;background:#102439}.cloud-settings h3{color:#C4F08D;margin:0 0 8px}.cloud-settings .settings{margin:12px 0}.cloud-settings .settings label{min-width:220px}.serve-controls{padding:9px 12px;border-radius:9px;background:#D9E7EB;color:#18384E;font-weight:650;margin:8px 0}.serve-controls button{margin-left:8px}
 body.cloud-viewer main button:not(.view-tab),body.cloud-viewer main input:not([id^="cloud"]),body.cloud-viewer main select:not([id^="cloud"]){pointer-events:none;opacity:.7}body.cloud-viewer .cloud-settings button,body.cloud-viewer .cloud-settings input,body.cloud-viewer .cloud-settings select{pointer-events:auto;opacity:1}
+
+/* V18: timeout stars are visible beside the team timeout control. */
+.timeout-stars{display:inline-block;vertical-align:middle;margin-left:9px;color:#AD761E;font-size:1.5rem;font-weight:900;letter-spacing:3px;min-width:0;text-shadow:0 1px 0 #fff9}
+.court.top-court .timeout-stars{color:#916115}
