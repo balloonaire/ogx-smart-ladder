@@ -228,3 +228,11 @@ body.cloud-viewer main button:not(.view-tab),body.cloud-viewer main input:not([i
 .mode-option span{display:grid;gap:5px}.mode-option strong{font-size:.92rem}.mode-option small{font-size:.75rem;color:#b4c6d4;line-height:1.4}
 .mode-option input{width:21px;height:21px;accent-color:#c4f08d;flex-shrink:0}
 @media(max-width:850px){.settings-layout{grid-template-columns:1fr}.settings-sidebar{position:static;order:-1}}
+
+/* V22 independent singles-court allocation */
+.singles-court-picker{border-top:1px solid #45596b;margin-top:14px;padding-top:14px}
+#singlesCourtChoices{display:grid;gap:7px;margin-top:10px}
+.single-court-choice{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid #4b6174;border-radius:9px;color:#e9f0f5;font-size:.88rem}
+.single-court-choice input{width:18px;height:18px;accent-color:#c4f08d}
+.single-court-choice:has(input:checked){border-color:#c4f08d;background:#284333}
+.single-court-choice:has(input:disabled){opacity:.58}

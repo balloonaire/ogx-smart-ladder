@@ -3,11 +3,12 @@
 const KEY='ogx-smart-ladder-v2', OLD='ogx-smart-ladder-v1';
 const $=id=>document.getElementById(id), now=()=>Date.now();
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`;
-const fresh=()=>({players:[],courts:Array(4).fill(null),courtNames:['1','2','3','4'],pendingPairs:[],history:[],topCompleted:0,settings:{target:11,winBy:2,cap:0,autoFill:true,topCourt:true,singles:false,scoringMethod:'rally'},lastPairs:[]});
+const fresh=()=>({players:[],courts:Array(4).fill(null),courtNames:['1','2','3','4'],pendingPairs:[],history:[],topCompleted:0,settings:{target:11,winBy:2,cap:0,autoFill:true,topCourt:true,singles:false,singlesCourts:[],scoringMethod:'rally'},lastPairs:[]});
 let state;try{state=JSON.parse(localStorage.getItem(KEY))||JSON.parse(localStorage.getItem(OLD))||fresh();if(!Array.isArray(state.players)||!Array.isArray(state.courts)||!Array.isArray(state.history))throw Error('Invalid');}catch{state=fresh();}
 state.pendingPairs=Array.isArray(state.pendingPairs)?state.pendingPairs:[];state.topCompleted=Number(state.topCompleted)||0;
 state.courtNames=Array.isArray(state.courtNames)?state.courtNames:state.courts.map((_,i)=>String(i+1));
 state.settings={...fresh().settings,...state.settings};
+state.settings.singlesCourts=Array.isArray(state.settings.singlesCourts)?state.settings.singlesCourts:[];
 state.lastPairs=Array.isArray(state.lastPairs)?state.lastPairs:[];
 if(!state.settings.topCourt){state.pendingPairs=[];for(const p of state.players){if(p.status==='waiting'){p.targetCourt=null;p.substitute=false;}p.topStreak=0;}}
 for(const p of state.players){p.attendance=['show','no-show','pending'].includes(p.attendance)?p.attendance:'show';p.gender=typeof p.gender==='string'?p.gender:'';p.fixedPartnerId=typeof p.fixedPartnerId==='string'?p.fixedPartnerId:null;p.topStreak=p.topStreak||0;p.targetCourt=Number.isInteger(p.targetCourt)?p.targetCourt:null;p.substitute=Boolean(p.substitute);p.playedMs=Number.isFinite(Number(p.playedMs))?Math.max(0,Number(p.playedMs)):0;p.fixedPartnerId=typeof p.fixedPartnerId==='string'?p.fixedPartnerId:null;}
@@ -65,10 +66,11 @@ function setFixedPair(a,b){
 const courtName=i=>state.courtNames[i]||String(i+1);
 const rankName=i=>`Court ${courtName(i)}${i===0&&state.settings.topCourt?' · TOP':''}`;
 const socialPlay=()=>!state.settings.topCourt;
+const singlesCourt=i=>Boolean(state.settings.singles)&&state.settings.singlesCourts.includes(state.courtNames[i]);
 const singlesPlay=()=>Boolean(state.settings.singles);
 function startSinglesMatch(i){
  if(state.courts[i])return false;
- const pool=waitingPlayers().filter(p=>!fixedMate(p));
+ const pool=waitingPlayers();
  let eligible=socialPlay()?pool:pool.filter(p=>p.targetCourt===i||p.targetCourt===null||(i===state.courts.length-1&&p.targetCourt>0));
  if(eligible.length<2)return false;
  eligible=shuffle(eligible).sort((a,b)=>socialPlay()?a.games-b.games||playedTime(a)-playedTime(b):(a.targetCourt===i?0:1)-(b.targetCourt===i?0:1)||a.games-b.games||playedTime(a)-playedTime(b));
@@ -200,16 +202,17 @@ function startSocialMatch(i){
  state.courts[i]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0],servingTeam:0,serverNumber:2,social:true};
  save();return true;
 }
-function startMatch(i,allowOverflow=true){if(singlesPlay())return startSinglesMatch(i);if(socialPlay())return startSocialMatch(i);if(state.courts[i])return false;const teams=takePairsForCourt(i);if(!teams)return allowOverflow?startDynamicOverflow(i):false;teams.flat().forEach(id=>{player(id).status='playing';player(id).substitute=false;});
+function startMatch(i,allowOverflow=true){if(singlesCourt(i))return startSinglesMatch(i);if(socialPlay())return startSocialMatch(i);if(state.courts[i])return false;const teams=takePairsForCourt(i);if(!teams)return allowOverflow?startDynamicOverflow(i):false;teams.flat().forEach(id=>{player(id).status='playing';player(id).substitute=false;});
  state.courts[i]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0],servingTeam:0,serverNumber:2};
  state.lastPairs.push(...teams.map(t=>[...t].sort().join('|')));state.lastPairs=state.lastPairs.slice(-16);save();return true;
 }
 function autoFill(){if(!state.settings.autoFill)return;
- if(singlesPlay()){for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startSinglesMatch(i);return;}
- if(socialPlay()){for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startSocialMatch(i);return;}
+ // Fill reserved singles courts first, without interrupting live doubles.
+ for(let i=0;i<state.courts.length;i++)if(!state.courts[i]&&singlesCourt(i))startSinglesMatch(i);
+ if(socialPlay()){for(let i=0;i<state.courts.length;i++)if(!state.courts[i]&&!singlesCourt(i))startSocialMatch(i);return;}
  // Normal placements take priority on ALL courts before any overflow borrowing.
- for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startMatch(i,false);
- for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startDynamicOverflow(i);
+ for(let i=0;i<state.courts.length;i++)if(!state.courts[i]&&!singlesCourt(i))startMatch(i,false);
+ for(let i=0;i<state.courts.length;i++)if(!state.courts[i]&&!singlesCourt(i))startDynamicOverflow(i);
 }
 function winningTeam(m){const [a,b]=m.scores,{target,winBy,cap}=state.settings;return (a>=target&&a-b>=winBy)||(cap>0&&a>=cap&&a>b)?0:(b>=target&&b-a>=winBy)||(cap>0&&b>=cap&&b>a)?1:null;}
 function finish(i){const m=state.courts[i];if(!m)return;const qualified=winningTeam(m);if(qualified===null&&!confirm('Winning condition not reached. Confirm the leading team as winner?'))return;
@@ -283,7 +286,9 @@ function filterRows(){
  for(const row of $('attendanceBody').querySelectorAll('tr[data-attendance-row]'))row.hidden=!row.dataset.searchName.includes(attendanceTerm);
  updateAttendanceSelectionUI();
 }
-function render(){const s=state.settings;$('courtCount').value=String(state.courts.length);$('target').value=String(s.target);$('winBy').value=String(s.winBy);$('cap').value=String(s.cap);$('autoFill').checked=s.autoFill;$('topCourtEnabled').checked=s.topCourt;$('singlesEnabled').checked=Boolean(s.singles);$('scoringMethod').value=s.scoringMethod;
+function render(){const s=state.settings;$('courtCount').value=String(state.courts.length);$('target').value=String(s.target);$('winBy').value=String(s.winBy);$('cap').value=String(s.cap);$('autoFill').checked=s.autoFill;$('topCourtEnabled').checked=s.topCourt;$('singlesEnabled').checked=Boolean(s.singles);
+ const singleChoices=$('singlesCourtChoices');
+ if(singleChoices)singleChoices.innerHTML=state.courtNames.map((name,i)=>`<label class="single-court-choice"><input type="checkbox" data-single-court="${esc(name)}" ${s.singlesCourts.includes(name)&&s.singles?'checked':''} ${state.courts[i]?'disabled title="Court has a live match"':''} ${!s.singles?'disabled':''}> Court ${esc(name)} ${state.courts[i]?'· Live':''}</label>`).join('');$('scoringMethod').value=s.scoringMethod;
  $('courtLabels').value=state.courtNames.join(', ');
  $('courtOrderEditor').innerHTML=state.courtNames.map((name,i)=>`<div class="court-order-row"><span class="court-order-rank">${s.topCourt?(i===0?'TOP':`Rank ${i+1}`):'SOCIAL'}</span><strong>Court ${esc(name)}</strong><div class="court-order-buttons"><button class="small secondary" data-action="move-court" data-index="${i}" data-direction="-1" aria-label="Move Court ${esc(name)} higher" ${i===0||state.courts.some(Boolean)?'disabled':''}>↑</button><button class="small secondary" data-action="move-court" data-index="${i}" data-direction="1" aria-label="Move Court ${esc(name)} lower" ${i===state.courtNames.length-1||state.courts.some(Boolean)?'disabled':''}>↓</button></div></div>`).join('');
  const queued=waitingPlayers().length,resting=state.players.filter(p=>p.status==='resting').length;$('playerSummary').textContent=`${state.players.length} registered · ${state.players.filter(p=>p.attendance==='show').length} SHOW · ${state.players.filter(p=>p.attendance==='pending').length} Pending · ${state.players.filter(p=>p.attendance==='no-show').length} NO SHOW · ${queued} waiting · ${resting} resting`;
@@ -294,8 +299,8 @@ function render(){const s=state.settings;$('courtCount').value=String(state.cour
  for(const id of [...attendanceSelection])if(!state.players.some(p=>p.id===id&&p.status!=='playing'))attendanceSelection.delete(id);
  $('attendanceBody').innerHTML=state.players.map(p=>`<tr data-attendance-row data-search-name="${esc(p.name.toLocaleLowerCase())}"><td><input type="checkbox" data-attendance-check="${p.id}" aria-label="Select ${esc(p.name)}" ${attendanceSelection.has(p.id)?'checked':''} ${p.status==='playing'?'disabled title="Player is on court"':''}></td><td>${esc(p.name)}</td><td>${esc(genderLabel(p))}</td><td><select data-attendance-id="${p.id}" aria-label="Attendance for ${esc(p.name)}" ${p.status==='playing'?'disabled':''}><option value="pending" ${p.attendance==='pending'?'selected':''}>Pending</option><option value="show" ${p.attendance==='show'?'selected':''}>SHOW</option><option value="no-show" ${p.attendance==='no-show'?'selected':''}>NO SHOW</option></select></td><td>${p.status==='playing'?'On court':p.status==='resting'?'Resting':'Waiting'}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">No registered players.</td></tr>';
  filterRows();
- $('courts').innerHTML=state.courts.map((m,i)=>{if(!m)return `<article class="court ${i===0&&s.topCourt?'top-court':'standard-court'}"><div class="court-head"><b><span class="court-fruit" aria-hidden="true">${i===0&&s.topCourt?'◆':'◈'}</span>${esc(rankName(i))}</b><span class="pill">Available</span></div><div class="empty">Next pairs are shown in the queue</div><button class="secondary" data-action="start" data-court="${i}">Start next match</button></article>`;
- return `<article class="court ${i===0&&s.topCourt?'top-court':'standard-court'}"><div class="court-head"><b><span class="court-fruit" aria-hidden="true">${i===0&&s.topCourt?'◆':'◈'}</span>${esc(rankName(i))}</b><span class="pill live">${m.overflow?'Overflow · ':''}${m.pausedAt?'Paused':'Live'}</span></div>${m.teams.map((team,t)=>`<div class="team team-${t===0?'a':'b'}"><div class="team-name">Team ${t?'B':'A'}<br><b>${esc(courtNames(team))}</b>${i===0&&s.topCourt&&!m.overflow?`<br><span class="muted">Top-court streak: ${Math.max(...team.map(id=>player(id)?.topStreak||0))+1}/2</span>`:''}<br><span class="muted">Timeouts: ${Math.min(3,Number(m.timeouts?.[t])||0)}</span></div><label class="score-entry"><span>Score</span><input class="score-input" type="number" inputmode="numeric" min="0" max="999" step="1" aria-label="Team ${t?'B':'A'} score on ${esc(rankName(i))}" data-manual-score data-court="${i}" data-team="${t}" value="${m.scores[t]}"></label><div><button class="small" data-action="score" data-court="${i}" data-team="${t}" data-delta="1" ${m.pausedAt?'disabled':''}>+1</button><br><button class="small secondary" data-action="score" data-court="${i}" data-team="${t}" data-delta="-1" ${m.pausedAt?'disabled':''}>−1</button></div></div><button class="small secondary" data-action="timeout" data-court="${i}" data-team="${t}" ${Number(m.timeouts?.[t])>=3?'disabled title="Maximum three timeouts recorded"':''}>Record Team ${t?'B':'A'} Timeout</button><span class="timeout-stars" aria-label="${Math.min(3,Number(m.timeouts?.[t])||0)} of 3 timeouts recorded">${'★'.repeat(Math.min(3,Math.max(0,Number(m.timeouts?.[t])||0)))}</span>`).join('')}${s.scoringMethod==='sideout'?`<div class="serve-controls">Serving: Team ${(m.servingTeam||0)===0?'A':'B'} · Server ${m.serverNumber||2} <button class="small secondary" data-action="switch-serve" data-court="${i}">Switch server / side-out</button></div>`:''}<p class="clock" data-clock="${i}">Match ${fmt((m.pausedAt||now())-m.startedAt-m.pausedMs)}</p><p class="hint">${winningTeam(m)!==null?'Winning score reached — confirm result.':'Match in progress'}</p><div class="actions"><button class="secondary" data-action="pause" data-court="${i}">${m.pausedAt?'Resume':'Pause'}</button><button data-action="finish" data-court="${i}">Finish</button><button class="danger" data-action="cancel" data-court="${i}">Cancel</button></div></article>`}).join('');
+ $('courts').innerHTML=state.courts.map((m,i)=>{if(!m)return `<article class="court ${i===0&&s.topCourt?'top-court':'standard-court'}"><div class="court-head"><b><span class="court-fruit" aria-hidden="true">${i===0&&s.topCourt?'◆':'◈'}</span>${esc(s.topCourt?rankName(i):`Court ${courtName(i)}`)}</b><span class="pill">Available</span></div><div class="empty">${singlesCourt(i)?'Singles · 1 vs 1':'Doubles · 2 vs 2'} · Next players are shown in the queue</div><button class="secondary" data-action="start" data-court="${i}">Start next match</button></article>`;
+ return `<article class="court ${i===0&&s.topCourt?'top-court':'standard-court'}"><div class="court-head"><b><span class="court-fruit" aria-hidden="true">${i===0&&s.topCourt?'◆':'◈'}</span>${esc(s.topCourt?rankName(i):`Court ${courtName(i)}`)}</b><span class="pill live">${m.singles?'SINGLES · ':''}${m.overflow?'Overflow · ':''}${m.pausedAt?'Paused':'Live'}</span></div>${m.teams.map((team,t)=>`<div class="team team-${t===0?'a':'b'}"><div class="team-name">Team ${t?'B':'A'}<br><b>${esc(courtNames(team))}</b>${i===0&&s.topCourt&&!m.overflow?`<br><span class="muted">Top-court streak: ${Math.max(...team.map(id=>player(id)?.topStreak||0))+1}/2</span>`:''}<br><span class="muted">Timeouts: ${Math.min(3,Number(m.timeouts?.[t])||0)}</span></div><label class="score-entry"><span>Score</span><input class="score-input" type="number" inputmode="numeric" min="0" max="999" step="1" aria-label="Team ${t?'B':'A'} score on ${esc(rankName(i))}" data-manual-score data-court="${i}" data-team="${t}" value="${m.scores[t]}"></label><div><button class="small" data-action="score" data-court="${i}" data-team="${t}" data-delta="1" ${m.pausedAt?'disabled':''}>+1</button><br><button class="small secondary" data-action="score" data-court="${i}" data-team="${t}" data-delta="-1" ${m.pausedAt?'disabled':''}>−1</button></div></div><button class="small secondary" data-action="timeout" data-court="${i}" data-team="${t}" ${Number(m.timeouts?.[t])>=3?'disabled title="Maximum three timeouts recorded"':''}>Record Team ${t?'B':'A'} Timeout</button><span class="timeout-stars" aria-label="${Math.min(3,Number(m.timeouts?.[t])||0)} of 3 timeouts recorded">${'★'.repeat(Math.min(3,Math.max(0,Number(m.timeouts?.[t])||0)))}</span>`).join('')}${s.scoringMethod==='sideout'?`<div class="serve-controls">Serving: Team ${(m.servingTeam||0)===0?'A':'B'} · Server ${m.serverNumber||2} <button class="small secondary" data-action="switch-serve" data-court="${i}">Switch server / side-out</button></div>`:''}<p class="clock" data-clock="${i}">Match ${fmt((m.pausedAt||now())-m.startedAt-m.pausedMs)}</p><p class="hint">${winningTeam(m)!==null?'Winning score reached — confirm result.':'Match in progress'}</p><div class="actions"><button class="secondary" data-action="pause" data-court="${i}">${m.pausedAt?'Resume':'Pause'}</button><button data-action="finish" data-court="${i}">Finish</button><button class="danger" data-action="cancel" data-court="${i}">Cancel</button></div></article>`}).join('');
  const ranked=[...state.players].sort((a,b)=>b.wins-a.wins||(b.pointsFor-b.pointsAgainst)-(a.pointsFor-a.pointsAgainst)||a.name.localeCompare(b.name));$('leaderboard').innerHTML=ranked.map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.name)}${genderShort(p)?` <span class="gender-tag">${genderShort(p)}</span>`:''}</td><td>${p.wins}</td><td>${p.losses}</td><td data-played="${p.id}">${fmtPlayed(playedTime(p))}</td><td>${p.pointsFor-p.pointsAgainst>0?'+':''}${p.pointsFor-p.pointsAgainst}</td></tr>`).join('')||'<tr><td colspan="6">No results yet.</td></tr>';
  $('history').innerHTML=state.history.slice(0,50).map(h=>`<div class="history-item"><b>${esc(h.teams[0].join(' / '))}</b> ${h.scores[0]}–${h.scores[1]} <b>${esc(h.teams[1].join(' / '))}</b><br><time>${new Date(h.endedAt).toLocaleString()} · ${esc(h.court||'Court')} · Winner: Team ${h.winner?'B':'A'}</time>${h.note?`<p class="hint">${esc(h.note)}</p>`:''}</div>`).join('')||'<p class="muted">Completed matches will appear here.</p>';
 }
@@ -372,7 +377,24 @@ document.addEventListener('change',e=>{const input=e.target.closest('input[data-
 $('courtCount').addEventListener('change',e=>{const n=Number(e.target.value);if(n<state.courts.length&&(state.courts.slice(n).some(Boolean)||state.pendingPairs.some(q=>q.target!==null&&q.target>=n))){alert('Finish affected matches and clear their waiting assignments before reducing courts.');render();return;}state.courts.length=n;for(let i=0;i<n;i++)if(state.courts[i]===undefined)state.courts[i]=null;state.courtNames=Array.from({length:n},(_,i)=>state.courtNames[i]||String(i+1));autoFill();save();render();});
 $('saveCourtLabels').addEventListener('click',()=>{const v=$('courtLabels').value.split(',').map(x=>x.trim());if(v.length!==state.courts.length||v.some(x=>!/^\d+$/.test(x))||new Set(v.map(x=>x.toLowerCase())).size!==v.length){alert(`Enter ${state.courts.length} unique court numbers separated by commas, highest court first.`);return;}if(state.courts.some(Boolean)){alert('Finish or cancel live matches before changing court numbers.');render();return;}state.courtNames=v;save();render();});
 for(const k of ['target','winBy','cap'])$(k).addEventListener('change',e=>{state.settings[k]=Number(e.target.value);save();render();});
-$('singlesEnabled').addEventListener('change',e=>{if(state.courts.some(Boolean)){alert('Finish or cancel live matches before switching singles/doubles.');render();return;}state.settings.singles=e.target.checked;state.pendingPairs=[];state.players.filter(p=>p.status==='waiting').forEach(p=>{p.targetCourt=null;p.topStreak=0;p.substitute=false;});autoFill();save();render();});
+$('singlesEnabled').addEventListener('change',e=>{
+ if(!e.target.checked&&state.courts.some(m=>m?.singles)){alert('Finish or cancel live singles matches before disabling singles courts.');render();return;}
+ state.settings.singles=e.target.checked;
+ if(e.target.checked&&!state.settings.singlesCourts.length){
+  const idle=state.courtNames.find((_,i)=>!state.courts[i]);
+  if(idle)state.settings.singlesCourts=[idle];
+ }
+ autoFill();save();render();
+});
+document.addEventListener('change',e=>{
+ const cb=e.target.closest('[data-single-court]');if(!cb)return;
+ const name=cb.dataset.singleCourt,i=state.courtNames.indexOf(name);
+ if(i<0||state.courts[i]){render();return;}
+ const selected=new Set(state.settings.singlesCourts);
+ if(cb.checked)selected.add(name);else selected.delete(name);
+ state.settings.singlesCourts=[...selected];
+ autoFill();save();render();
+});
 $('topCourtEnabled').addEventListener('change',e=>{if(state.courts.some(Boolean)){alert('Finish or cancel live matches before changing LADDER / SOCIAL PLAY mode.');render();return;}state.settings.topCourt=e.target.checked;state.pendingPairs=[];state.players.filter(p=>p.status==='waiting').forEach(p=>{p.targetCourt=null;p.topStreak=0;p.substitute=false;});autoFill();save();render();});
 $('scoringMethod').addEventListener('change',e=>{if(state.courts.some(Boolean)){alert('Finish current matches before switching scoring methods.');render();return;}state.settings.scoringMethod=e.target.value;save();render();});
 $('autoFill').addEventListener('change',e=>{state.settings.autoFill=e.target.checked;autoFill();save();render();});

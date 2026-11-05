@@ -102,3 +102,13 @@ Each team may record up to **3 timeouts per match**. One gold star appears besid
 - Singles ON assigns exactly one player to Team A and one to Team B on every court. All new matches use 1 vs 1; doubles and fixed partner pair allocation are inactive until singles is OFF.
 - Singles works in both LADDER and SOCIAL PLAY. LADDER singles promotes the winning individual and relegates the loser; TOP winner defends up to two wins. SOCIAL singles selects two waiting individuals for any open court and returns both to the general pool after finishing.
 - Switching singles or ladder/social requires no active matches.
+
+
+## V22 — Concurrent singles and doubles courts
+- Enable **Single player mode** in the right-hand Settings sidebar, then tick the physical courts assigned to singles (1 vs 1).
+- Unselected courts continue to run doubles (2 vs 2), including while singles matches are active.
+- Only idle courts can be reassigned; live matches and scores remain untouched.
+- The global waiting player pool feeds both match types; no player can be assigned to two simultaneous matches.
+- If auto-fill is enabled, singles courts are filled before doubles courts. Existing LADDER / SOCIAL PLAY selection remains active.
+- Turn singles off only after any active singles matches have finished or been cancelled.
+- This is a local code update; live Firebase synchronization still requires testing.
