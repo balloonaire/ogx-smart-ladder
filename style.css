@@ -219,3 +219,12 @@ body.cloud-viewer main button:not(.view-tab),body.cloud-viewer main input:not([i
 /* V18: timeout stars are visible beside the team timeout control. */
 .timeout-stars{display:inline-block;vertical-align:middle;margin-left:9px;color:#AD761E;font-size:1.5rem;font-weight:900;letter-spacing:3px;min-width:0;text-shadow:0 1px 0 #fff9}
 .court.top-court .timeout-stars{color:#916115}
+
+/* V21 — dedicated play-mode sidebar */
+.settings-layout{display:grid;grid-template-columns:minmax(0,1fr) 275px;gap:24px;align-items:start}
+.settings-main{min-width:0}.settings-sidebar{position:sticky;top:14px;background:#102237;border:1px solid #486073;border-radius:13px;padding:18px;color:#eaf1f7}
+.settings-sidebar h3{font-size:.8rem;letter-spacing:.18em;color:#c4f08d;margin:0 0 16px}
+.mode-option{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 0;border-top:1px solid #354b60;cursor:pointer}
+.mode-option span{display:grid;gap:5px}.mode-option strong{font-size:.92rem}.mode-option small{font-size:.75rem;color:#b4c6d4;line-height:1.4}
+.mode-option input{width:21px;height:21px;accent-color:#c4f08d;flex-shrink:0}
+@media(max-width:850px){.settings-layout{grid-template-columns:1fr}.settings-sidebar{position:static;order:-1}}

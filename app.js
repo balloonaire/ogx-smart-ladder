@@ -3,7 +3,7 @@
 const KEY='ogx-smart-ladder-v2', OLD='ogx-smart-ladder-v1';
 const $=id=>document.getElementById(id), now=()=>Date.now();
 const uid=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`;
-const fresh=()=>({players:[],courts:Array(4).fill(null),courtNames:['1','2','3','4'],pendingPairs:[],history:[],topCompleted:0,settings:{target:11,winBy:2,cap:0,autoFill:true,topCourt:true,scoringMethod:'rally'},lastPairs:[]});
+const fresh=()=>({players:[],courts:Array(4).fill(null),courtNames:['1','2','3','4'],pendingPairs:[],history:[],topCompleted:0,settings:{target:11,winBy:2,cap:0,autoFill:true,topCourt:true,singles:false,scoringMethod:'rally'},lastPairs:[]});
 let state;try{state=JSON.parse(localStorage.getItem(KEY))||JSON.parse(localStorage.getItem(OLD))||fresh();if(!Array.isArray(state.players)||!Array.isArray(state.courts)||!Array.isArray(state.history))throw Error('Invalid');}catch{state=fresh();}
 state.pendingPairs=Array.isArray(state.pendingPairs)?state.pendingPairs:[];state.topCompleted=Number(state.topCompleted)||0;
 state.courtNames=Array.isArray(state.courtNames)?state.courtNames:state.courts.map((_,i)=>String(i+1));
@@ -65,6 +65,20 @@ function setFixedPair(a,b){
 const courtName=i=>state.courtNames[i]||String(i+1);
 const rankName=i=>`Court ${courtName(i)}${i===0&&state.settings.topCourt?' · TOP':''}`;
 const socialPlay=()=>!state.settings.topCourt;
+const singlesPlay=()=>Boolean(state.settings.singles);
+function startSinglesMatch(i){
+ if(state.courts[i])return false;
+ const pool=waitingPlayers().filter(p=>!fixedMate(p));
+ let eligible=socialPlay()?pool:pool.filter(p=>p.targetCourt===i||p.targetCourt===null||(i===state.courts.length-1&&p.targetCourt>0));
+ if(eligible.length<2)return false;
+ eligible=shuffle(eligible).sort((a,b)=>socialPlay()?a.games-b.games||playedTime(a)-playedTime(b):(a.targetCourt===i?0:1)-(b.targetCourt===i?0:1)||a.games-b.games||playedTime(a)-playedTime(b));
+ const chosen=eligible.slice(0,2),teams=[[chosen[0].id],[chosen[1].id]];
+ chosen.forEach(p=>{p.status='playing';p.substitute=false;});
+ state.pendingPairs=state.pendingPairs.filter(q=>!q.ids.some(id=>chosen.some(p=>p.id===id)));
+ state.courts[i]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0],servingTeam:0,serverNumber:2,social:socialPlay(),singles:true};
+ save();return true;
+}
+
 const shuffle=items=>{const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 function queuePlayer(p,target=null){p.status='waiting';p.queuedAt=now();p.targetCourt=target;p.substitute=false;}
 function waitingPlayers(){return state.players.filter(p=>p.status==='waiting'&&p.attendance==='show');}
@@ -186,11 +200,12 @@ function startSocialMatch(i){
  state.courts[i]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0],servingTeam:0,serverNumber:2,social:true};
  save();return true;
 }
-function startMatch(i,allowOverflow=true){if(socialPlay())return startSocialMatch(i);if(state.courts[i])return false;const teams=takePairsForCourt(i);if(!teams)return allowOverflow?startDynamicOverflow(i):false;teams.flat().forEach(id=>{player(id).status='playing';player(id).substitute=false;});
+function startMatch(i,allowOverflow=true){if(singlesPlay())return startSinglesMatch(i);if(socialPlay())return startSocialMatch(i);if(state.courts[i])return false;const teams=takePairsForCourt(i);if(!teams)return allowOverflow?startDynamicOverflow(i):false;teams.flat().forEach(id=>{player(id).status='playing';player(id).substitute=false;});
  state.courts[i]={id:uid(),teams,scores:[0,0],startedAt:now(),pausedAt:null,pausedMs:0,timeouts:[0,0],servingTeam:0,serverNumber:2};
  state.lastPairs.push(...teams.map(t=>[...t].sort().join('|')));state.lastPairs=state.lastPairs.slice(-16);save();return true;
 }
 function autoFill(){if(!state.settings.autoFill)return;
+ if(singlesPlay()){for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startSinglesMatch(i);return;}
  if(socialPlay()){for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startSocialMatch(i);return;}
  // Normal placements take priority on ALL courts before any overflow borrowing.
  for(let i=0;i<state.courts.length;i++)if(!state.courts[i])startMatch(i,false);
@@ -207,6 +222,9 @@ function finish(i){const m=state.courts[i];if(!m)return;const qualified=winningT
  if(m.social||socialPlay()){
    m.teams.flat().forEach(id=>{const p=player(id);if(p){p.topStreak=0;queuePlayer(p,null);}});
    note='SOCIAL PLAY · random court assignment · no promotion or relegation';
+ }else if(m.singles){
+   if(i===0){state.topCompleted++;const winner=player(winIds[0]);const streak=(winner.topStreak||0)+1;winner.topStreak=streak>=2?0:streak;queuePlayer(winner,streak>=2?state.courts.length-1:0);note=streak>=2?'Singles TOP champion completed 2 defenses':'Singles TOP champion defends';}
+   else{winIds.forEach(id=>{const p=player(id);p.topStreak=0;queuePlayer(p,i-1);});note='Singles winner ascends one court';}
  }else if(m.overflow){
    m.teams.flat().forEach(id=>{const p=player(id);p.topStreak=0;queuePlayer(p,m.originalTargets?.[id]??1);});
    note=`Dynamic overflow on ${rankName(i)} (from ${rankName(m.overflowSource??1)}): results recorded; original ladder eligibility retained`;
@@ -218,7 +236,7 @@ function finish(i){const m=state.courts[i];if(!m)return;const qualified=winningT
  state.history.unshift({id:m.id,court:courtName(i),teams:m.teams.map(t=>t.map(displayName)),scores:[...m.scores],winner:w,note,endedAt:now()});
  state.courts[i]=null;autoFill();save();render();
 }
-function cancel(i){const m=state.courts[i];if(!m||!confirm('Cancel this match without recording a result?'))return;if(m.social||socialPlay()){for(const id of m.teams.flat()){const p=player(id);if(p)queuePlayer(p,null);}}else if(m.overflow){for(const id of m.teams.flat()){const p=player(id);if(p)queuePlayer(p,m.originalTargets?.[id]??1);}}else for(const ids of m.teams)queuePair(ids,i,0);state.courts[i]=null;autoFill();save();render();}
+function cancel(i){const m=state.courts[i];if(!m||!confirm('Cancel this match without recording a result?'))return;if(m.social||socialPlay()){for(const id of m.teams.flat()){const p=player(id);if(p)queuePlayer(p,null);}}else if(m.overflow){for(const id of m.teams.flat()){const p=player(id);if(p)queuePlayer(p,m.originalTargets?.[id]??1);}}else if(m.singles){for(const id of m.teams.flat()){const p=player(id);if(p)queuePlayer(p,i);}}else for(const ids of m.teams)queuePair(ids,i,0);state.courts[i]=null;autoFill();save();render();}
 function updateScore(i,t,d){const m=state.courts[i];if(!m||m.pausedAt)return;if(state.settings.scoringMethod==='sideout'&&d>0&&m.servingTeam!==t){alert('Side-out scoring: only the serving team can earn a point. Switch server first.');return;}m.scores[t]=Math.max(0,m.scores[t]+d);save();render();}
 function switchServe(i){const m=state.courts[i];if(!m)return;if(m.serverNumber===1)m.serverNumber=2;else{m.servingTeam=1-(m.servingTeam||0);m.serverNumber=1;}save();render();}
 function setManualScore(i,t,raw){
@@ -265,7 +283,7 @@ function filterRows(){
  for(const row of $('attendanceBody').querySelectorAll('tr[data-attendance-row]'))row.hidden=!row.dataset.searchName.includes(attendanceTerm);
  updateAttendanceSelectionUI();
 }
-function render(){const s=state.settings;$('courtCount').value=String(state.courts.length);$('target').value=String(s.target);$('winBy').value=String(s.winBy);$('cap').value=String(s.cap);$('autoFill').checked=s.autoFill;$('topCourtEnabled').checked=s.topCourt;$('scoringMethod').value=s.scoringMethod;
+function render(){const s=state.settings;$('courtCount').value=String(state.courts.length);$('target').value=String(s.target);$('winBy').value=String(s.winBy);$('cap').value=String(s.cap);$('autoFill').checked=s.autoFill;$('topCourtEnabled').checked=s.topCourt;$('singlesEnabled').checked=Boolean(s.singles);$('scoringMethod').value=s.scoringMethod;
  $('courtLabels').value=state.courtNames.join(', ');
  $('courtOrderEditor').innerHTML=state.courtNames.map((name,i)=>`<div class="court-order-row"><span class="court-order-rank">${s.topCourt?(i===0?'TOP':`Rank ${i+1}`):'SOCIAL'}</span><strong>Court ${esc(name)}</strong><div class="court-order-buttons"><button class="small secondary" data-action="move-court" data-index="${i}" data-direction="-1" aria-label="Move Court ${esc(name)} higher" ${i===0||state.courts.some(Boolean)?'disabled':''}>↑</button><button class="small secondary" data-action="move-court" data-index="${i}" data-direction="1" aria-label="Move Court ${esc(name)} lower" ${i===state.courtNames.length-1||state.courts.some(Boolean)?'disabled':''}>↓</button></div></div>`).join('');
  const queued=waitingPlayers().length,resting=state.players.filter(p=>p.status==='resting').length;$('playerSummary').textContent=`${state.players.length} registered · ${state.players.filter(p=>p.attendance==='show').length} SHOW · ${state.players.filter(p=>p.attendance==='pending').length} Pending · ${state.players.filter(p=>p.attendance==='no-show').length} NO SHOW · ${queued} waiting · ${resting} resting`;
@@ -354,6 +372,7 @@ document.addEventListener('change',e=>{const input=e.target.closest('input[data-
 $('courtCount').addEventListener('change',e=>{const n=Number(e.target.value);if(n<state.courts.length&&(state.courts.slice(n).some(Boolean)||state.pendingPairs.some(q=>q.target!==null&&q.target>=n))){alert('Finish affected matches and clear their waiting assignments before reducing courts.');render();return;}state.courts.length=n;for(let i=0;i<n;i++)if(state.courts[i]===undefined)state.courts[i]=null;state.courtNames=Array.from({length:n},(_,i)=>state.courtNames[i]||String(i+1));autoFill();save();render();});
 $('saveCourtLabels').addEventListener('click',()=>{const v=$('courtLabels').value.split(',').map(x=>x.trim());if(v.length!==state.courts.length||v.some(x=>!/^\d+$/.test(x))||new Set(v.map(x=>x.toLowerCase())).size!==v.length){alert(`Enter ${state.courts.length} unique court numbers separated by commas, highest court first.`);return;}if(state.courts.some(Boolean)){alert('Finish or cancel live matches before changing court numbers.');render();return;}state.courtNames=v;save();render();});
 for(const k of ['target','winBy','cap'])$(k).addEventListener('change',e=>{state.settings[k]=Number(e.target.value);save();render();});
+$('singlesEnabled').addEventListener('change',e=>{if(state.courts.some(Boolean)){alert('Finish or cancel live matches before switching singles/doubles.');render();return;}state.settings.singles=e.target.checked;state.pendingPairs=[];state.players.filter(p=>p.status==='waiting').forEach(p=>{p.targetCourt=null;p.topStreak=0;p.substitute=false;});autoFill();save();render();});
 $('topCourtEnabled').addEventListener('change',e=>{if(state.courts.some(Boolean)){alert('Finish or cancel live matches before changing LADDER / SOCIAL PLAY mode.');render();return;}state.settings.topCourt=e.target.checked;state.pendingPairs=[];state.players.filter(p=>p.status==='waiting').forEach(p=>{p.targetCourt=null;p.topStreak=0;p.substitute=false;});autoFill();save();render();});
 $('scoringMethod').addEventListener('change',e=>{if(state.courts.some(Boolean)){alert('Finish current matches before switching scoring methods.');render();return;}state.settings.scoringMethod=e.target.value;save();render();});
 $('autoFill').addEventListener('change',e=>{state.settings.autoFill=e.target.checked;autoFill();save();render();});

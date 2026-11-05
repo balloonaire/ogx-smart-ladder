@@ -95,3 +95,10 @@ Upload all SIX files: `index.html`, `app.js`, `style.css`, `v12-ui.js`, `cloud-s
 
 ## V20 — Team timeout stars
 Each team may record up to **3 timeouts per match**. One gold star appears beside the Record Team Timeout button for each recorded timeout (★, ★★, ★★★). The button disables at three; the count is saved with the match.
+
+
+## V21: Singles and right-side play mode sidebar
+- Settings has a right-hand sidebar containing TOP-court champion defense and a separate Single player mode checkbox. On mobile it stacks above settings.
+- Singles ON assigns exactly one player to Team A and one to Team B on every court. All new matches use 1 vs 1; doubles and fixed partner pair allocation are inactive until singles is OFF.
+- Singles works in both LADDER and SOCIAL PLAY. LADDER singles promotes the winning individual and relegates the loser; TOP winner defends up to two wins. SOCIAL singles selects two waiting individuals for any open court and returns both to the general pool after finishing.
+- Switching singles or ladder/social requires no active matches.
