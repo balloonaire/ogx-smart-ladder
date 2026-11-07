@@ -115,3 +115,15 @@ Each team may record up to **3 timeouts per match**. One gold star appears besid
 
 ## V23 — OGX Nightshift color system
 The complete interface is refreshed around **Onyx Black `#010101`**, **Electric Indigo `#6331FB`**, and **Tropical Mint `#88F9C0`**. Onyx is the main canvas, Indigo defines navigation and championship emphasis, and Mint highlights actions, live status, and selections. Teams retain distinct high-contrast indigo-tinted and mint-tinted panels. This update is visual only: V22 mixed singles/doubles court assignment and prior gameplay features are preserved.
+
+
+## V24 — One-click WIN (no points required)
+Each active team has a **🏆 WIN** button. Selecting it opens a confirmation naming the team, then finishes the match, updates wins/losses, match history, player rotation and court availability, without needing a score. Match history displays **WIN ONLY** rather than 0–0 for these results; point differential is not changed. Existing score-entry and Finish options are unchanged.
+
+
+## V25 — Settings-controlled Quick WIN
+- A new **Quick WIN (no score entry)** checkbox appears in Settings → PLAY MODES (right sidebar).
+- **OFF by default**: Quick WIN buttons are hidden from live match cards. Regular score entry and Finish remain available.
+- **ON**: each live team has a 🏆 WIN button. Selecting it prompts for confirmation, then records a WIN ONLY result without requiring scores.
+- Toggle this setting while matches are active; it takes effect immediately without affecting the matches.
+- Existing V24 data is preserved and defaults to OFF if this setting was absent.

@@ -307,3 +307,8 @@ button:disabled{opacity:.44;box-shadow:none}
 footer{color:#9f95b1}
 @media(prefers-reduced-motion:no-preference){.view-tab,button,.button,.court,.quick-stats>div{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}.quick-stats>div:hover{border-color:#7854cf;transform:translateY(-2px)}}
 @media(max-width:650px){.graphic-banner{border-radius:15px}.quick-stats{gap:7px}.quick-stats>div{padding:11px 5px}.view-tab{padding:11px 10px}.court{padding:12px}}
+
+/* V24 quick-win actions: scoreless match completion */
+.quick-win{display:block;width:100%;margin:9px 0 12px;padding:12px 10px;border:1px solid #88F9C0;border-radius:12px;background:#88F9C0;color:#010101;font-weight:850;letter-spacing:.055em;cursor:pointer;box-shadow:0 3px 16px #88F9C022}
+.quick-win:hover{background:#a9ffd7;border-color:#a9ffd7;transform:translateY(-1px)}
+.quick-win:focus-visible{outline:3px solid #6331FB;outline-offset:3px}
