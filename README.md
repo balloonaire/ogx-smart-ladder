@@ -127,3 +127,14 @@ Each active team has a **🏆 WIN** button. Selecting it opens a confirmation na
 - **ON**: each live team has a 🏆 WIN button. Selecting it prompts for confirmation, then records a WIN ONLY result without requiring scores.
 - Toggle this setting while matches are active; it takes effect immediately without affecting the matches.
 - Existing V24 data is preserved and defaults to OFF if this setting was absent.
+
+
+## V26 Trial — OGX SOCIAL BALANCE
+- Optional feature **only** for SOCIAL PLAY doubles (2 vs 2). It never changes LADDER matchmaking or Singles.
+- Settings > PLAY MODES > OGX SOCIAL BALANCE (TRIAL): enable/disable without resetting live matches. New matches use the selected settings; existing matches retain their match configuration.
+- Players can optionally choose a broad social experience preference (Open to all / New / Developing / Experienced). No public handicap labels.
+- Balanced partner mode selects the same four waiting players as before (prioritizing fewer games and fixed-partner preferences), then minimizes estimated team experience imbalance. Random partner mode preserves prior pairing behavior. Experience is a self-selected preference, not a competitive rating.
+- Optional friendly rules appear only on applicable new social doubles matches: controlled opening return or limited overhead attacks, after confirmation that all four players agree. Default is standard rules. These are house rules, not official tournament rules.
+- Accessibility setting is an organizer reminder to discuss suitable accommodations, not an automatic handicap or medical classification.
+- No score/rotation penalties for declining; match history notes any trial rule. No rating changes from trial outcomes.
+- Full interactive browser and Firebase multi-device testing still required before production deployment.
