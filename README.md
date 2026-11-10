@@ -138,3 +138,7 @@ Each active team has a **🏆 WIN** button. Selecting it opens a confirmation na
 - Accessibility setting is an organizer reminder to discuss suitable accommodations, not an automatic handicap or medical classification.
 - No score/rotation penalties for declining; match history notes any trial rule. No rating changes from trial outcomes.
 - Full interactive browser and Firebase multi-device testing still required before production deployment.
+
+
+## V27 — Live player replacement
+During an active Singles or Doubles match, use **↔ Replace [player]** below the team name, choose a checked-in waiting player by number and confirm. This preserves court, score, match clock, pause state, timeouts, serving state and remaining players. Replacements are logged in match history. The outgoing player returns to the waiting pool; the incoming player leaves the queue and joins the live match. The outgoing player receives only elapsed participation time, not the eventual result. The replacement earns the result at match end. The operator may rest the outgoing player from Players if appropriate. Does not automatically start other matches.

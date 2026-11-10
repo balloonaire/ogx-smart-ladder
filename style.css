@@ -320,3 +320,6 @@ footer{color:#9f95b1}
 .experience-picker{margin-top:6px}.experience-picker label{display:grid;gap:3px;font-size:.69rem;color:#bcb4d1}
 .friendly-rule{margin:10px 0;padding:12px;background:#191328;border:1px solid #6331fb;border-radius:10px}.friendly-rule label{display:grid;gap:7px}.friendly-rule small{display:block;color:#88f9c0;margin-top:5px}
 [hidden]{display:none!important}
+
+/* V27: mid-match player replacement */
+.live-player-slots{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 3px}.live-replace{font-size:.76rem!important;padding:6px 9px!important;border:1px solid #88F9C0!important;color:#88F9C0!important;background:#18112c!important}.live-replace:hover{background:#6331FB!important;color:white!important}
