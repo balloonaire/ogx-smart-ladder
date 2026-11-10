@@ -142,3 +142,10 @@ Each active team has a **🏆 WIN** button. Selecting it opens a confirmation na
 
 ## V27 — Live player replacement
 During an active Singles or Doubles match, use **↔ Replace [player]** below the team name, choose a checked-in waiting player by number and confirm. This preserves court, score, match clock, pause state, timeouts, serving state and remaining players. Replacements are logged in match history. The outgoing player returns to the waiting pool; the incoming player leaves the queue and joins the live match. The outgoing player receives only elapsed participation time, not the eventual result. The replacement earns the result at match end. The operator may rest the outgoing player from Players if appropriate. Does not automatically start other matches.
+
+
+## V28 — Live Player Replacement ON/OFF
+- In Settings → PLAY MODES, toggle **Live Player Replacement** at any time, including during live games.
+- ON displays the existing ↔ Replace buttons beside live players; OFF hides and disables replacement actions.
+- No match, score, timer, timeout, rotation or history reset occurs when changing this setting.
+- The setting is saved in the session state and defaults to ON for existing sessions.
